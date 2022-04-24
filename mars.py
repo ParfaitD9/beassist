@@ -1,6 +1,6 @@
 from datetime import date
 from datetime import datetime as dt
-from utils import Customer, Task
+from orm import Customer, Task
 from jinja2 import Template
 
 import pdfkit
