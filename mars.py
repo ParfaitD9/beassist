@@ -1,36 +1,110 @@
-from datetime import date
 from datetime import datetime as dt
-from orm import Customer, Task
-from jinja2 import Template
+from datetime import date
+import os
+import smtplib
 
+import peewee as pw
+from orm import Customer, Facture, Task
+
+from jinja2 import Template
 import pdfkit
 
-def create_facture(client : Customer, task : Task, tmp : date):
-    task = Task.get(Task.customer == client.pk, Task.executed_at == tmp)
+from email.message import EmailMessage
+
+PROJECT_ID = 'beassist'
+CLIENT_ID = '601027467397-vujjn2g025edu4elt1v9oed31ev0lhhe.apps.googleusercontent.com'
+CLIENT_SECRET = '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'
+
+
+def create_facture(client : int, tmp : str):
+    _tmp : dt = dt.strptime(tmp, '%d-%m-%Y').date()
+    try:
+        client : Customer = Customer.get(Customer.pk == client)
+        task : Task = Task.get(Task.customer == client.pk, Task.executed_at == _tmp)
+    except Exception as e:
+        print("One or multiple args seems invalid")
+        return
+    else:
+        pass
 
     if task:
         with open('templates/facture.html') as f:
             t : Template = Template(f.read())
-            now = dt.now().date().strftime('%d/%m/%Y')
             ctx= {
                 'task' : task,
                 'client' : client,
-                'date' : now
+                'date' : tmp,
+                'facture' : f'{client.pk}#{tmp}'
             }
             t = t.render(ctx)
+            print(tmp)
             try:
-                now = now.replace('/', '-')
-                pdfkit.from_string(t, f'./docs/{client.pk}#{now}.pdf')
+                
+                f_id = f'{client.pk}#{tmp}'
+                pdfkit.from_string(t, f'./docs/{f_id}.pdf')
             except Exception as e:
-                print(e)
+                print(e.__class__)
             else:
-                print(f"{task.name}-{client.name}-{now} generated")
+                try:
+                    Facture.create(hash= f_id , customer_id= client, date= tmp)
+                except (pw.IntegrityError,) as e:
+                    print("Same facture seems already exists.")
+                else:
+                    print(f"Facture {f_id} generated")
     else:
         print("Task not found for this customer and this day.")
 
+def send_facture(facture : str):
+    loadenv()
+    print(os.environ.get('EMAIL_USER'), os.environ.get('EMAIL_PASSWORD'))
+    f : Facture = Facture.get(Facture.hash == facture)
+    u : Customer = Customer.get(Customer.pk == f.customer)
+
+    with smtplib.SMTP('smtp.gmail.com', 587) as s:
+        s.starttls()
+        s.login(
+            os.environ.get('EMAIL_USER'),
+            os.environ.get('EMAIL_PASSWORD')
+        )
+        sender = os.environ.get('EMAIL_USER')
+        receiver = u.email
+        print(f"Successuly connected as {sender}")
+
+
+        body = '''
+        Body of ze email
+        '''
+
+        
+        
+        message = EmailMessage()
+        message['From'] = sender
+        message['To'] = receiver
+        message['Subject'] = 'Facture'
+        message.set_content(body)
+
+        pdf = f'./docs/{facture}.pdf'
+        with open(pdf, 'rb') as b_pdf:
+            message.add_attachment(
+                b_pdf.read(),
+                maintype= 'application',
+                subtype= 'octet-stream',
+                filename= b_pdf.name.removeprefix('./docs/'),
+            )
+        print(b_pdf.name)
+        s.send_message(message)
+        
+        print(f'Facture {facture} send to {receiver}.')
+
+def loadenv(path= './.env'):
+    with open(path) as f:
+        for line in f.readlines():
+            key, val = line.strip('\n').split('=', maxsplit= 1)
+            os.environ.setdefault(key, val)
+
 if __name__ == '__main__':
     c : Customer = Customer.get(Customer.pk == 1)
-    t : Task = Task.get(Task.customer == c.pk)
+    #t : Task = Task.get(Task.customer == c.pk)
     d = dt.now().date()
 
-    create_facture(c, t, d)
+    create_facture(c, d)

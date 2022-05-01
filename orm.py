@@ -1,5 +1,6 @@
 import peewee as pw
 from datetime import datetime as dt
+from datetime import date as dte
 
 db = pw.SqliteDatabase('database.db3')
 
@@ -17,8 +18,9 @@ class Customer(BaseModel):
     email = pw.CharField(null= True)
 
 class Facture(BaseModel):
-    hash = pw.CharField()
+    hash = pw.CharField(primary_key= True)
     customer = pw.ForeignKeyField(Customer, backref= 'factures')
+    date = pw.DateField(default= dte.today)
 
 class Task(BaseModel):
     pk = pw.CharField(primary_key= True)
@@ -26,5 +28,5 @@ class Task(BaseModel):
     price = pw.FloatField()
     taxes = pw.FloatField()
     customer = pw.ForeignKeyField(Customer, backref= 'tasks')
-    executed_at = pw.DateField(default= dt.now)
+    executed_at = pw.DateField(default= dte.today)
 
