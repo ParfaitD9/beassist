@@ -1,8 +1,7 @@
 from datetime import datetime as dt
-from datetime import date
 import os
 import smtplib
-
+import ssl
 import peewee as pw
 from orm import Customer, Facture, Task
 
@@ -56,12 +55,12 @@ def create_facture(client : int, tmp : str):
 
 def send_facture(facture : str):
     loadenv()
-    print(os.environ.get('EMAIL_USER'), os.environ.get('EMAIL_PASSWORD'))
+    
     f : Facture = Facture.get(Facture.hash == facture)
     u : Customer = Customer.get(Customer.pk == f.customer)
 
-    with smtplib.SMTP('smtp.gmail.com', 587) as s:
-        s.starttls()
+    ctx = ssl.create_default_context()
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context= ctx) as s:
         s.login(
             os.environ.get('EMAIL_USER'),
             os.environ.get('EMAIL_PASSWORD')
@@ -91,7 +90,6 @@ def send_facture(facture : str):
                 subtype= 'octet-stream',
                 filename= b_pdf.name.removeprefix('./docs/'),
             )
-        print(b_pdf.name)
         s.send_message(message)
         
         print(f'Facture {facture} send to {receiver}.')
