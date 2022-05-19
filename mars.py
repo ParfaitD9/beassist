@@ -88,7 +88,7 @@ def send_facture(facture: str):
                 b_pdf.read(),
                 maintype='application',
                 subtype='octet-stream',
-                filename=b_pdf.name.removeprefix('./docs/'),
+                filename=os.path.basename(b_pdf.name),
             )
         s.send_message(message)
 
