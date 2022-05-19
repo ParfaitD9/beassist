@@ -32,7 +32,8 @@ Vous aurez aussi besoin de la bibliothèque de gestion de pdf [**wkhtmltopdf**](
 Vous devez l'installer selon l'architecture de votre système et *ajouter le chemin à votre varible d'environnement PATH*
 
 ## Installation
-Notez que pour le programme vous pouvez utiliser un environnement virtuel.
+Pour l'installation, suivez les instructions suivantes.
+Notez que la commande *python* est subtituable à *python3* suivant votre installation
 Dans votre terminal, tapez les commandes suivantes:
 
 1. Clonez ce repository grâce à la commande:

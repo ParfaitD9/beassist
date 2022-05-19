@@ -1,13 +1,13 @@
 from datetime import datetime as dt
 import argparse
-from mars import create_customer, create_facture, delete_customer, send_facture, loadenv
+from mars import create_customer, create_facture, delete_customer, retrieve_facture, send_facture, loadenv
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
     'command',
     help="Command to execute",
-    choices=['create', 'send', 'delete']
+    choices=['create', 'send', 'delete', 'retrieve']
 )
 
 parser.add_argument(
@@ -38,7 +38,9 @@ if __name__ == '__main__':
         elif args.option == 'customer':
             create_customer()
     elif args.command == 'retrieve':
-        pass
+        if args.option == 'facture':
+            if retrieve_facture(args.customer, args.date):
+                print(retrieve_facture(args.customer, args.date))
     elif args.command == 'send':
         if args.option == 'facture':
             send_facture(args.facture)

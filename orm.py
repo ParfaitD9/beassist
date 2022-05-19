@@ -18,11 +18,23 @@ class Customer(BaseModel):
     city = pw.CharField()
     email = pw.CharField(null=True)
 
+    def __str__(self):
+        return f'{self.name} at {self.city}'
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
 
 class Facture(BaseModel):
     hash = pw.CharField(primary_key=True)
     customer = pw.ForeignKeyField(Customer, backref='factures')
     date = pw.DateField(default=dte.today, formats=['%Y-%m-%d'])
+
+    def __str__(self):
+        return f'Facture {self.hash} for {self.customer} of {self.date}'
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
 
 class Task(BaseModel):
@@ -32,3 +44,9 @@ class Task(BaseModel):
     taxes = pw.FloatField()
     customer = pw.ForeignKeyField(Customer, backref='tasks')
     executed_at = pw.DateField(default=dte.today)
+
+    def __str__(self):
+        return f'{self.name} for {self.customer}'
+
+    def __repr__(self) -> str:
+        return self.__str__()

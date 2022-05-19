@@ -5,6 +5,8 @@ import ssl
 import peewee as pw
 from orm import Customer, Facture, Task
 import json
+import hashlib as hb
+import dateparser as dp
 
 from jinja2 import Template
 import pdfkit
@@ -22,6 +24,10 @@ def create_facture(client: int, tmp: str):
     except Exception as e:
         print("One or multiple args seems invalid")
         return
+    _hash = hb.blake2b(
+        f'{client.pk}#{tmp}'.encode(),
+        digest_size=4
+    ).hexdigest()
 
     if task:
         with open('templates/facture.html') as f:
@@ -39,21 +45,20 @@ def create_facture(client: int, tmp: str):
                 'nas': os.environ.get('ADMIN_NAS'),
                 'tvs': os.environ.get('ADMIN_TVS'),
                 'date': tmp,
-                'facture': f'{client.pk}#{tmp}'
+                'facture': _hash
             }
             t = t.render(ctx)
             try:
-                f_id = f'{client.pk}#{tmp}'
-                pdfkit.from_string(t, f'./docs/{f_id}.pdf')
+                pdfkit.from_string(t, f'./docs/{_hash}.pdf')
             except Exception as e:
                 print(e.__class__)
             else:
                 try:
-                    Facture.create(hash=f_id, customer_id=client, date=tmp)
+                    Facture.create(hash=_hash, customer_id=client, date=tmp)
                 except (pw.IntegrityError,) as e:
                     print("Same facture seems already exists.")
                 else:
-                    print(f"Facture {f_id} generated")
+                    print(f"Facture {_hash} generated")
     else:
         print("Task not found for this customer and this day.")
 
@@ -139,6 +144,14 @@ def delete_customer(key):
     else:
         c.delete_instance()
         print(f'User {c.name} supprimé.')
+
+
+def retrieve_facture(customer, date) -> Facture:
+    _date = dp.parse(date)
+    try:
+        return Facture.get(customer_id=customer, date=_date)
+    except (pw.DoesNotExist, ) as e:
+        print('Aucune facture ne correspond à cet utilisateur pour la date saisie')
 
 
 def loadenv(path='./.env.json'):
