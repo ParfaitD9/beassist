@@ -25,6 +25,12 @@ C'est le fichier d'initialisation du programme sur votre machine. Il se charge d
 Bien qu'absent dans le repository, c'est un fichier que vous devrez créer en vous inspirant du template 
 *.env.exemple* 
 
+## Dépendances
+Pour faire fonctionner ce programme, vous aurez besoin d'une version de [Python](www.python.org) 3.7+
+Vous aurez aussi besoin de la bibliothèque de gestion de pdf [**wkhtmltopdf**](https://wkhtmltopdf.org/downloads.html).
+
+Vous devez l'installer selon l'architecture de votre système et *ajouter le chemin à votre varible d'environnement PATH*
+
 ## Installation
 Notez que pour le programme vous pouvez utiliser un environnement virtuel.
 Dans votre terminal, tapez les commandes suivantes:
@@ -33,18 +39,20 @@ Dans votre terminal, tapez les commandes suivantes:
 `git clone https://github.com/ParfaitD9/beassist.git`
 2. Rendez vous dans le répertoire beassit en tapant:
 `cd beassist`
-3. Installez les modules nécessaires grâce à la commande:
+3. Créez votre environnement virtuel:
+`python -m venv venv`
+4. Installez les modules nécessaires grâce à la commande:
 `pip install -r requirements.txt`
-4. Renommer le fichier *.env.exemple.json* *.env.json* grâce à la commande:
+5. Renommer le fichier *.env.exemple.json* *.env.json* grâce à la commande:
 `mv .env.exemple.json .env.json`
-5. Modifier le fichier avec vos informations
-6. Mettez en place la base de données grâce à la commande:
+6. Modifier le fichier avec vos informations
+7. Mettez en place la base de données grâce à la commande:
 `python setup.py`
 
-Voilà, vous venez de finir la mise en place de votre assistant. En cas d'erreur, n'hésitez pas à contacter [le développeur](mailto:pdetchenou@gmail.com)
+Voilà, vous venez de finir la mise en place de votre assistant. En cas d'erreur, n'hésitez pas à contacter à le reporter dans les issues.
 
-## Commande
-**Toutes ces commandes impose que vous soyez dans le dossier beassist.**
+## Commandes
+**Toutes ces commandes supposent que vous soyez dans le dossier beassist.**
 - Générer une facture
 
 `python manage.py create facture -c 25 -d 2022-05-01`
