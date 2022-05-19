@@ -6,29 +6,29 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
     'command',
-    help= "Command to execute",
-    choices= ['create', 'send', 'delete']
+    help="Command to execute",
+    choices=['create', 'send', 'delete']
 )
 
 parser.add_argument(
     'option',
-    help= "Option to command",
-    choices= ['facture', 'customer', ]
+    help="Option to command",
+    choices=['facture', 'customer', ]
 )
-parser.add_argument('--customer', '-c', type= int, help= "Customer's id")
+parser.add_argument('--customer', '-c', type=int, help="Customer's id")
 parser.add_argument(
     '--date',
     '-d',
-    help= "Date of task execution",
-    default= dt.now().date().strftime('%d-%m-%Y')
+    help="Date of task execution",
+    default=dt.now().date().strftime('%d-%m-%Y')
 )
 parser.add_argument(
     '--facture',
     '-f',
-    help= "Facture hash"
+    help="Facture hash"
 )
 
-#vybbwpysqpangfdo
+# vybbwpysqpangfdo
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -45,4 +45,3 @@ if __name__ == '__main__':
     elif args.command == 'delete':
         if args.option == 'customer':
             delete_customer(args.customer)
-    

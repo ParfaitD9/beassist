@@ -8,3 +8,5 @@ docs/*
 tosend/
 beassit/
 supplier.py
+database.*
+*.db3
