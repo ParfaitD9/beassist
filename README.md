@@ -46,14 +46,25 @@ Voilà, vous venez de finir la mise en place de votre assistant. En cas d'erreur
 ## Commande
 **Toutes ces commandes impose que vous soyez dans le dossier beassist.**
 - Générer une facture
+
 `python manage.py create facture -c 25 -d 01-05-2022`
+
 Cette commande génère une facture nommée 25#01-05-2022 dans le dossier docs qui est une facture pour les tâches effectués par le client avec l'id 25 à la date du 1er Mai 2021. L'argument -c ou --customer est l'id du client dans la base de données et l'argument -d ou --date est la date d'exécution de la tâche. Si vous ne fournissez pas de date, la date d'aujourd'hui est prise par défaut.
+
 - Envoyer une facture
+
 `python manage.py send facture -f 25#01-05-2022`
+
 Cette commande envoie la facture 25#01-05-2022 au client concerné. Dans ce cas, c'est le client avec l'id 25.
+
 - Créer un nouveau client
+
 `python manage.py create customer`
+
 Cette commande vous permet de créer un nouvel utilisateur grâce à la ligne de commande. Plusieurs informations vous sont demandées successivement. Saissisez les chaque fois. Vous pouvez arrêter le processus par la commande `Ctrl+C`.
+
 - Supprimer un client
+
 `python manage.py delete customer -c 25`
+
 Cette commande supprimera l'utilisateur avec l'id 25 dans la base de données.
