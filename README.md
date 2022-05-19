@@ -35,7 +35,7 @@ Dans votre terminal, tapez les commandes suivantes:
 `cd beassist`
 3. Installez les modules nécessaires grâce à la commande:
 `pip install -r requirements.txt`
-4. Renommer le fichier *.env.exemple* *.env* grâce à la commande:
+4. Renommer le fichier *.env.exemple.json* *.env.json* grâce à la commande:
 `mv .env.exemple .env`
 5. Modifier le fichier avec vos informations
 6. Mettez en place la base de données grâce à la commande:
