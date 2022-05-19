@@ -54,18 +54,17 @@
     <div class="main">
         <div class="elastic spc-between">
             <div>
-                <p>Marc - Antoine Cloutier</p>
-                <p>13425 A - David</p>
-                <p>St- Janvier</p>
-                <p>QC J7J 1H2</p>
-                <p>Tel : 514 258 4393</p>
-                <p>NAS : XXX XXX 268</p>
+                <p>{{admin.name}}</p>
+                <p>{{admin.city}}</p>
+                <p>{{admin.adress}}</p>
+                <p>Tel : {{admin.phone}}</p>
+                <p>NAS : {{nas}}</p>
             </div>
             <div class="elastic column end" >
                 <p>{{facture}}</p>
-                <p style="font-size: 1.5em;">Marc - Antoine Cloutier</p>
+                <p style="font-size: 1.5em;">{{admin.name}}</p>
                 <p>{{date}}</p>
-                <p>Object : Facture pour service d'entrtient ménager</p>
+                <p>Object : Facture pour {{task.name}}</p>
             </div>
         </div>
         <div style="margin-top: 2.5em;">
@@ -83,7 +82,7 @@
                     <th class="border-left">Montant</th>
                 </tr>
                 <tr>
-                    <td>-Marc -Antoine Cloutier-</td>
+                    <td>-{{admin.name}}-</td>
                     <td class="border-left"></td>
                 </tr>
                 <tr>
@@ -103,7 +102,7 @@
                     <td class="border-left">Taxes : {{task.taxes}}$</td>
                 </tr>
                 <tr>
-                    <td>Numero de TPS / TVQ : 74584 5506 RT0001</td>
+                    <td>Numero de TPS / TVQ : {{tvs}}</td>
                     <td class="border-left">Total : {{task.price + task.taxes}}$</td>
                 </tr>
                 

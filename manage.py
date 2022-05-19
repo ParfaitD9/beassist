@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 import argparse
-from mars import create_customer, create_facture, delete_customer, send_facture
+from mars import create_customer, create_facture, delete_customer, send_facture, loadenv
 
 parser = argparse.ArgumentParser()
 
@@ -20,7 +20,7 @@ parser.add_argument(
     '--date',
     '-d',
     help="Date of task execution",
-    default=dt.now().date().strftime('%d-%m-%Y')
+    default=dt.now().date().strftime('%Y-%m-%d')
 )
 parser.add_argument(
     '--facture',
@@ -28,10 +28,10 @@ parser.add_argument(
     help="Facture hash"
 )
 
-# vybbwpysqpangfdo
 args = parser.parse_args()
 
 if __name__ == '__main__':
+    loadenv()
     if args.command == 'create':
         if args.option == 'facture':
             create_facture(args.customer, args.date)

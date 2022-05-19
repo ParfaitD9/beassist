@@ -22,11 +22,11 @@ class Customer(BaseModel):
 class Facture(BaseModel):
     hash = pw.CharField(primary_key=True)
     customer = pw.ForeignKeyField(Customer, backref='factures')
-    date = pw.DateField(default=dte.today)
+    date = pw.DateField(default=dte.today, formats=['%Y-%m-%d'])
 
 
 class Task(BaseModel):
-    pk = pw.CharField(primary_key=True)
+    pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
     price = pw.FloatField()
     taxes = pw.FloatField()

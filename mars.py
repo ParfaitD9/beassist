@@ -4,6 +4,7 @@ import smtplib
 import ssl
 import peewee as pw
 from orm import Customer, Facture, Task
+import json
 
 from jinja2 import Template
 import pdfkit
@@ -13,7 +14,7 @@ import pprint
 
 
 def create_facture(client: int, tmp: str):
-    _tmp: dt = dt.strptime(tmp, '%d-%m-%Y').date()
+    _tmp: dt = dt.strptime(tmp, '%Y-%m-%d').date()
     try:
         client: Customer = Customer.get(Customer.pk == client)
         task: Task = Task.get(Task.customer == client.pk,
@@ -28,11 +29,19 @@ def create_facture(client: int, tmp: str):
             ctx = {
                 'task': task,
                 'client': client,
+                'admin': Customer(
+                    name=os.environ.get('ADMIN_FULLNAME'),
+                    adress=os.environ.get('ADIMN_ADRESS'),
+                    phone=os.environ.get('ADMIN_PHONE'),
+                    city=os.environ.get('ADMIN_CITY'),
+                    email=os.environ.get('EMAIL_USER')
+                ),
+                'nas': os.environ.get('ADMIN_NAS'),
+                'tvs': os.environ.get('ADMIN_TVS'),
                 'date': tmp,
                 'facture': f'{client.pk}#{tmp}'
             }
             t = t.render(ctx)
-            print(tmp)
             try:
                 f_id = f'{client.pk}#{tmp}'
                 pdfkit.from_string(t, f'./docs/{f_id}.pdf')
@@ -132,11 +141,10 @@ def delete_customer(key):
         print(f'User {c.name} supprimé.')
 
 
-def loadenv(path='./.env'):
+def loadenv(path='./.env.json'):
     with open(path) as f:
-        for line in f.readlines():
-            key, val = line.strip('\n').split('=', maxsplit=1)
-            os.environ.setdefault(key, val)
+        d = json.load(f)
+        os.environ.update(d)
 
 
 if __name__ == '__main__':
