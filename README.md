@@ -36,7 +36,7 @@ Dans votre terminal, tapez les commandes suivantes:
 3. Installez les modules nécessaires grâce à la commande:
 `pip install -r requirements.txt`
 4. Renommer le fichier *.env.exemple.json* *.env.json* grâce à la commande:
-`mv .env.exemple .env`
+`mv .env.exemple.json .env.json`
 5. Modifier le fichier avec vos informations
 6. Mettez en place la base de données grâce à la commande:
 `python setup.py`
