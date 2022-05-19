@@ -58,13 +58,13 @@ Voilà, vous venez de finir la mise en place de votre assistant. En cas d'erreur
 
 `python manage.py create facture -c 25 -d 2022-05-01`
 
-Cette commande génère une facture nommée 25#2022-05-01 dans le dossier docs qui est une facture pour les tâches effectués par le client avec l'id 25 à la date du 1er Mai 2021. L'argument -c ou --customer est l'id du client dans la base de données et l'argument -d ou --date est la date d'exécution de la tâche. Si vous ne fournissez pas de date, la date d'aujourd'hui est prise par défaut.
+Cette commande génère une facture nommée grâce à un algorithme de hachage dans le dossier docs qui est une facture pour les tâches effectués par le client avec l'id 25 à la date du 1er Mai 2021. L'argument -c ou --customer est l'id du client dans la base de données et l'argument -d ou --date est la date d'exécution de la tâche. Plusieurs formats sont supportés pour la date. Si vous ne fournissez pas de date, la date d'aujourd'hui est prise par défaut.
 
 - Envoyer une facture
 
-`python manage.py send facture -f 25#01-05-2022`
+`python manage.py send facture -f e1bd89ca`
 
-Cette commande envoie la facture 25#01-05-2022 au client concerné. Dans ce cas, c'est le client avec l'id 25.
+Cette commande envoie la facture e1bd89ca au client concerné.
 
 - Créer un nouveau client
 

@@ -16,7 +16,7 @@ import pprint
 
 
 def create_facture(client: int, tmp: str):
-    _tmp: dt = dt.strptime(tmp, '%Y-%m-%d').date()
+    _tmp: dt = dp.parse(tmp)
     try:
         client: Customer = Customer.get(Customer.pk == client)
         task: Task = Task.get(Task.customer == client.pk,
