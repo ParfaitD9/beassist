@@ -4,9 +4,11 @@ __pycache__
 docs/*
 *.pdf
 .env
+.env.json
 *.zip
 tosend/
 beassit/
 supplier.py
 database.*
 *.db3
+tests/
