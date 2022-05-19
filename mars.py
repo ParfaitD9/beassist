@@ -1,5 +1,4 @@
 from datetime import datetime as dt
-from distutils.log import info
 import os
 import smtplib
 import ssl
@@ -12,10 +11,6 @@ import pdfkit
 from email.message import EmailMessage
 import pprint
 
-PROJECT_ID = 'beassist'
-#CLIENT_ID = '601027467397-vujjn2g025edu4elt1v9oed31ev0lhhe.apps.googleusercontent.com'
-#CLIENT_SECRET = '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'
-
 
 def create_facture(client: int, tmp: str):
     _tmp: dt = dt.strptime(tmp, '%d-%m-%Y').date()
@@ -26,8 +21,6 @@ def create_facture(client: int, tmp: str):
     except Exception as e:
         print("One or multiple args seems invalid")
         return
-    else:
-        pass
 
     if task:
         with open('templates/facture.html') as f:
@@ -57,8 +50,6 @@ def create_facture(client: int, tmp: str):
 
 
 def send_facture(facture: str):
-    loadenv()
-
     f: Facture = Facture.get(Facture.hash == facture)
     u: Customer = Customer.get(Customer.pk == f.customer)
 
@@ -150,7 +141,6 @@ def loadenv(path='./.env'):
 
 if __name__ == '__main__':
     c: Customer = Customer.get(Customer.pk == 1)
-    #t : Task = Task.get(Task.customer == c.pk)
     d = dt.now().date()
 
     create_facture(c, d)
