@@ -1,6 +1,8 @@
 from datetime import datetime as dt
 import argparse
-from mars import create_customer, create_facture, delete_customer, retrieve_facture, send_facture, loadenv
+from mars import create_customer, create_facture, delete_customer, delete_facture,\
+    retrieve_facture, retrieve_factures, send_facture, loadenv
+import asyncio
 
 parser = argparse.ArgumentParser()
 
@@ -13,7 +15,7 @@ parser.add_argument(
 parser.add_argument(
     'option',
     help="Option to command",
-    choices=['facture', 'customer', ]
+    choices=['facture', 'customer', 'factures']
 )
 parser.add_argument('--customer', '-c', type=int, help="Customer's id")
 parser.add_argument(
@@ -41,9 +43,14 @@ if __name__ == '__main__':
         if args.option == 'facture':
             if retrieve_facture(args.customer, args.date):
                 print(retrieve_facture(args.customer, args.date))
+        elif args.option == 'factures':
+            retrieve_factures(args.date)
     elif args.command == 'send':
         if args.option == 'facture':
             send_facture(args.facture)
     elif args.command == 'delete':
         if args.option == 'customer':
             delete_customer(args.customer)
+
+        if args.option == 'facture':
+            delete_facture(args.facture, cus=args.customer, date=args.date)

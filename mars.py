@@ -26,7 +26,8 @@ def create_facture(client: int, tmp: str):
         return
     _hash = hb.blake2b(
         f'{client.pk}#{tmp}'.encode(),
-        digest_size=4
+        digest_size=4,
+        salt=b'#d$fe2ad'
     ).hexdigest()
 
     if task:
@@ -152,6 +153,26 @@ def retrieve_facture(customer, date) -> Facture:
         return Facture.get(customer_id=customer, date=_date)
     except (pw.DoesNotExist, ) as e:
         print('Aucune facture ne correspond à cet utilisateur pour la date saisie')
+
+
+def retrieve_factures(date):
+    _date = dp.parse(date)
+    for facture in Facture.select().where(Facture.date == date):
+        print(facture)
+
+
+def delete_facture(_hash=None, cus=None, date=None):
+    try:
+        f: Facture = Facture.get(
+            Facture.hash == _hash or (
+                Facture.customer == cus and Facture.date == dp.parse(date))
+        )
+    except (pw.DoesNotExist,) as e:
+        print('Not facture existing with this args')
+    else:
+        f.delete_instance()
+        os.remove(f'./docs/{f.hash}.pdf')
+        print('Facture successfully deleted')
 
 
 def loadenv(path='./.env.json'):
