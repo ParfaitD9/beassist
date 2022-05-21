@@ -4,7 +4,6 @@ import smtplib
 import ssl
 import peewee as pw
 from orm import Customer, Facture, Task
-import json
 import hashlib as hb
 import dateparser as dp
 
@@ -45,7 +44,7 @@ def create_facture(client: int, tmp: str):
                 ),
                 'nas': os.environ.get('ADMIN_NAS'),
                 'tvs': os.environ.get('ADMIN_TVS'),
-                'date': tmp,
+                'date': dt.today().strftime('%Y-%m-%d'),
                 'facture': _hash
             }
             t = t.render(ctx)
@@ -55,7 +54,9 @@ def create_facture(client: int, tmp: str):
                 print(e.__class__)
             else:
                 try:
-                    Facture.create(hash=_hash, customer_id=client, date=tmp)
+                    Facture.create(
+                        hash=_hash, customer_id=client, date=dt.today()
+                    )
                 except (pw.IntegrityError,) as e:
                     print("Same facture seems already exists.")
                 else:
@@ -173,12 +174,6 @@ def delete_facture(_hash=None, cus=None, date=None):
         f.delete_instance()
         os.remove(f'./docs/{f.hash}.pdf')
         print('Facture successfully deleted')
-
-
-def loadenv(path='./.env.json'):
-    with open(path) as f:
-        d = json.load(f)
-        os.environ.update(d)
 
 
 if __name__ == '__main__':

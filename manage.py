@@ -1,8 +1,8 @@
 from datetime import datetime as dt
 import argparse
 from mars import create_customer, create_facture, delete_customer, delete_facture,\
-    retrieve_facture, retrieve_factures, send_facture, loadenv
-import asyncio
+    retrieve_facture, retrieve_factures, send_facture
+from dotenv import load_dotenv
 
 parser = argparse.ArgumentParser()
 
@@ -33,7 +33,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    loadenv()
+    load_dotenv()
     if args.command == 'create':
         if args.option == 'facture':
             create_facture(args.customer, args.date)
