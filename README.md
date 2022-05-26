@@ -40,6 +40,8 @@ Vous aurez aussi besoin de la bibliothèque de gestion de pdf [**wkhtmltopdf**](
 
 Vous devez l'installer selon l'architecture de votre système et _ajouter le chemin à votre varible d'environnement PATH_
 
+Vous aurez aussi besoin de créer des identifiants OAuth2 dans votre projet, [grâce à cloud google](https://console.cloud.google.com/apis/credentials). Téléchargez ensuite vos clés dans un fichier **credentials.json** dans le répertoire du projet.
+
 ## Installation
 
 Pour l'installation, suivez les instructions suivantes.
