@@ -14,6 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
+from email.mime.application import MIMEApplication
 from mimetypes import guess_type as guess_mime_type
 
 # If modifying these scopes, delete the file token.json.
@@ -59,6 +60,10 @@ def add_attachment(message: MIMEMultipart, filename: str):
     elif main_type == 'audio':
         fp = open(filename, 'rb')
         msg = MIMEAudio(fp.read(), _subtype=sub_type)
+        fp.close()
+    elif main_type == 'application':
+        fp = open(filename, 'rb')
+        msg = MIMEApplication(fp.read(), _subtype=sub_type)
         fp.close()
     else:
         fp = open(filename, 'rb')

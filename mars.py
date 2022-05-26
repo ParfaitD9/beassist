@@ -5,6 +5,7 @@ from orm import Customer, Facture, Task
 import hashlib as hb
 import dateparser as dp
 
+import sys
 from jinja2 import Template
 import pdfkit
 
@@ -134,6 +135,36 @@ def create_customer():
             print(f'Utilisateur {name} créé')
     else:
         print("Création annulée")
+
+
+def create_task():
+    name = input('Quelle tâche avez vous effectuez ? : ')
+    price = float(input('Quelle est son coût ? : '))
+    customer_id = (
+        input('À quelle client ? (Vous pouvez saisir le nom où l\'id) : '))
+    try:
+        if customer_id.isnumeric():
+            customer = Customer.get(Customer.pk == customer_id)
+        else:
+            customer = Customer.get(Customer.name == customer_id)
+    except (pw.DoesNotExist, ) as e:
+        print('Désolé, ce utilisateur semble ne pas exister')
+        sys.exit()
+
+    _date = dp.parse(
+        input('À quelle date avez vous réaliser cette tâche ?: ')).date()
+    t = {
+        'name': name,
+        'price': price,
+        'customer_id': customer,
+        'executed_at': _date
+    }
+    valid = input(f'Voulez-vous créez la tâche \n {t} ? (O/n) :')
+    if valid == 'O':
+        t = Task.create(**t)
+        print('Tâche créée avec succès')
+    else:
+        print('Création annulée')
 
 
 def delete_customer(key):
