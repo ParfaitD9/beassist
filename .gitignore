@@ -13,3 +13,7 @@ database.*
 tests.py
 *.csv
 enerv.py
+credentials.json
+*.pickle
+*.log
+*.txt
