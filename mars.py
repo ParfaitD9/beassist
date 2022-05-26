@@ -1,7 +1,5 @@
 from datetime import datetime as dt
 import os
-import smtplib
-import ssl
 import peewee as pw
 from orm import Customer, Facture, Task
 import hashlib as hb
@@ -12,6 +10,8 @@ import pdfkit
 
 from email.message import EmailMessage
 import pprint
+
+from mailer import gmail_authenticate, send_message
 
 
 def create_facture(client: int, tmp: str):
@@ -68,38 +68,34 @@ def create_facture(client: int, tmp: str):
 def send_facture(facture: str):
     f: Facture = Facture.get(Facture.hash == facture)
     u: Customer = Customer.get(Customer.pk == f.customer)
+    receiver = u.email
+    srv = gmail_authenticate()
+    body = '''
+    Bonjour cher client,
+Vous trouverez ci-joint la facturation des travaux effectués sur votre terrain entre
+le 15 et le 28 Avril 2022.
 
-    ctx = ssl.create_default_context()
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=ctx) as s:
-        s.login(
-            os.environ.get('EMAIL_USER'),
-            os.environ.get('EMAIL_PASSWORD')
+Si vous voyez des erreurs, s'il vous plaît communiquer avec moi.
+
+Bien à vous
+Marc-Antoine Cloutier
+Entretien Excellence & Cie
+            
+Lavage de vitres - Solutions durables et R&D
+514 268 4393
+    '''
+    try:
+        r = send_message(
+            srv,
+            receiver,
+            'Facture de la part de Excellence Entretien',
+            body,
+            [f'./docs/{facture}.pdf']
         )
-        sender = os.environ.get('EMAIL_USER')
-        receiver = u.email
-        print(f"Successuly connected as {sender}")
-
-        body = '''
-        Body of ze email
-        '''
-
-        message = EmailMessage()
-        message['From'] = sender
-        message['To'] = receiver
-        message['Subject'] = 'Facture'
-        message.set_content(body)
-
-        pdf = f'./docs/{facture}.pdf'
-        with open(pdf, 'rb') as b_pdf:
-            message.add_attachment(
-                b_pdf.read(),
-                maintype='application',
-                subtype='octet-stream',
-                filename=os.path.basename(b_pdf.name),
-            )
-        s.send_message(message)
-
-        print(f'Facture {facture} send to {receiver}.')
+    except (Exception,) as e:
+        print(f'{e} sending mail to {receiver}')
+    else:
+        print(f'Facture {facture} send to {receiver}. \n Code: \n {r}')
 
 
 def create_customer():
