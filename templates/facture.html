@@ -55,15 +55,16 @@
     <div class="main">
         <div class="elastic spc-between">
             <div>
+                <p style="font-weight: bold;">Entretien Excellence & Cie</p>
+                <p>Lavage de vitres - Solutions durables et R&D</p>
+                <p>Mirabel, Québec</p><br>
                 <p>{{admin.name}}</p>
-                <p>{{admin.city}}</p>
-                <p>{{admin.adress}}</p>
-                <p>Tel : {{admin.phone}}</p>
-                <p>NAS : {{nas}}</p>
+                <p>Directeur des opérations commerciales</p>
+                <p>{{admin.phone}}</p>
+                <p>entretienexcellence@gmail.com</p>
             </div>
             <div class="elastic column end" >
                 <h2 style="font-weight:lighter;">Facture : {{facture}}</h2>
-                <p style="font-size: 1.5em;">{{admin.name}}</p>
                 <p>{{date}}</p>
                 <p>Object : Facture pour {{task.name}}</p>
             </div>
@@ -71,8 +72,7 @@
         <div style="margin-top: 2.5em;">
             <p>{{client.name}}</p>
             <p>{{client.adress}}</p>
-            <p>{{client.phone}}</p>
-            <p>{{client.city}}</p>
+            <p>Tel : {{client.phone}}</p>
             <p>{{client.email}}</p>
         </div>
 
@@ -91,20 +91,16 @@
                     <td class="border-left"></td>
                 </tr>
                 <tr>
-                    <td>-Section Client</td>
-                    <td class="border-left"></td>
-                </tr>
-                <tr>
                     <td></td>
                     <td class="border-left">Sous-total : {{task.price}}$</td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td class="border-left">Taxes : {{task.taxes}}$</td>
+                    <td class="border-left">Taxes : {{task.taxes()}} $</td>
                 </tr>
                 <tr>
                     <td>Numero de TPS / TVQ : {{tvs}}</td>
-                    <td class="border-left">Total : {{task.price + task.taxes}}$</td>
+                    <td class="border-left">Total : {{round(task.price + task.taxes(), 2)}}$</td>
                 </tr>
                 
             </table>

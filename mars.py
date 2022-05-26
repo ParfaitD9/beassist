@@ -25,9 +25,10 @@ def create_facture(client: int, tmp: str):
         return
     _hash = hb.blake2b(
         f'{client.pk}#{tmp}'.encode(),
-        digest_size=4,
+        digest_size=2,
         salt=b'#d$fe2ad'
     ).hexdigest()
+    _hash = f'{_hash}-2022-C'
 
     if task:
         with open('templates/facture.html') as f:
@@ -45,7 +46,8 @@ def create_facture(client: int, tmp: str):
                 'nas': os.environ.get('ADMIN_NAS'),
                 'tvs': os.environ.get('ADMIN_TVS'),
                 'date': dt.today().strftime('%Y-%m-%d'),
-                'facture': _hash
+                'facture': _hash,
+                'round': round
             }
             t = t.render(ctx)
             try:

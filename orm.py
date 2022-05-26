@@ -41,9 +41,11 @@ class Task(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
     price = pw.FloatField()
-    taxes = pw.FloatField()
     customer = pw.ForeignKeyField(Customer, backref='tasks')
     executed_at = pw.DateField(default=dte.today)
+
+    def taxes(self):
+        return round(self.price*0.14975)
 
     def __str__(self):
         return f'{self.name} for {self.customer}'
