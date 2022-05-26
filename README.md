@@ -33,6 +33,10 @@ C'est le fichier d'initialisation du programme sur votre machine. Il se charge d
 Bien qu'absent dans le repository, c'est un fichier que vous devrez créer en vous inspirant du template
 _.env.exemple_
 
+### credentials.json
+
+C'est le fichier comportants les clés de votre connexion Oauth2. Apprenez en plus [ici](#dépendances)
+
 ## Dépendances
 
 Pour faire fonctionner ce programme, vous aurez besoin d'une version de [Python](www.python.org) 3.7+
@@ -54,12 +58,18 @@ Dans votre terminal, tapez les commandes suivantes:
    `cd beassist`
 3. Créez votre environnement virtuel:
    `python -m venv venv`
-4. Installez les modules nécessaires grâce à la commande:
+4. Activez votre environnement virtuel en tapant:
+   - Linux
+     `source venv/bin/activate`
+   - Windows
+     `venv\Scripts\activate`
+5. Installez les modules nécessaires grâce à la commande:
    `pip install -r requirements.txt`
-5. Renommer le fichier _.env.exemple_ _.env_ grâce à la commande:
+6. Renommez le fichier _.env.exemple_ _.env_ grâce à la commande:
    `mv .env.exemple .env`
-6. Modifier le fichier avec vos informations
-7. Mettez en place la base de données grâce à la commande:
+7. Modifiez le fichier avec vos informations
+8. Ajoutez le fichier [**credentials.json**](#credentialsjson) au répertoire
+9. Mettez en place la base de données grâce à la commande:
    `python setup.py`
 
 Voilà, vous venez de finir la mise en place de votre assistant. En cas d'erreur, n'hésitez pas à contacter à le reporter dans les issues.
