@@ -18,7 +18,7 @@ from mimetypes import guess_type as guess_mime_type
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://mail.google.com/']
-EMAIL = 'pdetchenou@gmail.com'
+EMAIL = os.getenv('EMAIL_USER')
 
 
 def gmail_authenticate():
@@ -92,20 +92,3 @@ def send_message(service, destination, obj, body, attachments=[]):
         userId="me",
         body=build_message(destination, obj, body, attachments)
     ).execute()
-
-
-if __name__ == '__main__':
-    service: Resource = gmail_authenticate()
-
-    result = service.users().messages().list(userId='me', q='Salut').execute()
-    messages = []
-    if 'messages' in result:
-        messages.extend(result['messages'])
-    while 'nextPageToken' in result:
-        page_token = result['nextPageToken']
-        result = service.users().messages().list(
-            userId='me', q='Salut', pageToken=page_token).execute()
-        if 'messages' in result:
-            messages.extend(result['messages'])
-
-    print(messages)
