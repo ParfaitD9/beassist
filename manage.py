@@ -66,6 +66,7 @@ Sélectionner les tâches à partir de cette date.
 parser.add_argument(
     '--obj',
     '-o',
+    default='travaux',
     help='''
 Objet de la facture
 '''

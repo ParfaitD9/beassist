@@ -10,31 +10,30 @@ from jinja2 import Template
 import pdfkit
 
 
-import pprint
 from tabulate import tabulate
 
 from mailer import gmail_authenticate, send_message
 
 
 def create_facture(client: int, obj: str, tmp: str, fin=None):
-    _tmp: dt = dp.parse(tmp)
+    _tmp: dt = dp.parse(tmp).date()
     today = dt.today().strftime('%Y-%m-%d')
 
     if fin:
-        _fin: dt = dp.parse(fin)
+        _fin: dt = dp.parse(fin).date()
     try:
         client: Customer = Customer.get(Customer.pk == client)
         if fin:
             print(f'Tâches du {_tmp} au {_fin}')
             tasks = Task.select().where((_tmp <= Task.executed_at <= _fin)
                                         & (Task.customer == client)
-                                        & (Task.facture is None)
+                                        & (Task.facture == None)
                                         )
         else:
             print(f'Tâches du {_tmp}')
             tasks = Task.select().where((Task.executed_at == _tmp)
                                         & (Task.customer == client)
-                                        & (Task.facture is None)
+                                        & (Task.facture == None)
                                         )
     except Exception as e:
         print("One or multiple args seems invalid")
@@ -73,7 +72,6 @@ def create_facture(client: int, obj: str, tmp: str, fin=None):
             except Exception as e:
                 print(e.__class__)
             else:
-                print(f'{_hash}, {client.pk}, {today}, {obj}')
                 try:
                     f = Facture.create(
                         hash=_hash,
@@ -88,13 +86,13 @@ def create_facture(client: int, obj: str, tmp: str, fin=None):
                         query = Task.update(facture=f).where(
                             (_tmp <= Task.executed_at <= _fin) & (
                                 Task.customer == client)
-                            & (Task.facture is None)
+                            & (Task.facture == None)
                         )
                     else:
                         query = Task.update(facture=f).where(
                             (Task.executed_at == _tmp) & (
                                 Task.customer == client)
-                            & (Task.facture is None)
+                            & (Task.facture == None)
                         )
                     query.execute()
                     print(f"Facture {_hash} generated")
@@ -132,6 +130,8 @@ Lavage de vitres - Solutions durables et R&D
     except (Exception,) as e:
         print(f'{e} sending mail to {receiver}')
     else:
+        f.sent = True
+        f.save()
         print(f'Facture {facture} send to {receiver}. \n Code: \n {r}')
 
 
