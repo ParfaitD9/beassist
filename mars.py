@@ -9,8 +9,9 @@ import sys
 from jinja2 import Template
 import pdfkit
 
-from email.message import EmailMessage
+
 import pprint
+from tabulate import tabulate
 
 from mailer import gmail_authenticate, send_message
 
@@ -138,9 +139,10 @@ def create_customer():
 
 
 def lister_customer():
-    for customer in Customer.select():
-        customer: Customer
-        print(f'{customer.pk} {customer.name} {customer.phone}')
+    customers = [customer for customer in Customer.select()]
+
+    print(tabulate([[cus.pk, cus.name, cus.phone]
+          for cus in customers], headers=['ID', 'Nom', 'Contact'], tablefmt='orgtbl'))
 
 
 def create_task():
