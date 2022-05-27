@@ -4,6 +4,7 @@ from orm import db, Customer, Task, Facture
 if __name__ == '__main__':
     try:
         db.connect()
+        db.drop_tables([Customer, Task, Facture])
         db.create_tables([Customer, Task, Facture])
         db.close()
     except Exception as e:

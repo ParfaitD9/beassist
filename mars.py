@@ -137,6 +137,12 @@ def create_customer():
         print("Création annulée")
 
 
+def lister_customer():
+    for customer in Customer.select():
+        customer: Customer
+        print(f'{customer.pk} {customer.name} {customer.phone}')
+
+
 def create_task():
     name = input('Quelle tâche avez vous effectuez ? : ')
     price = float(input('Quelle est son coût ? : '))

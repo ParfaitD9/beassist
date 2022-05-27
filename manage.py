@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 import argparse
-from mars import create_customer, create_facture, create_task, delete_customer, delete_facture,\
+from mars import create_customer, create_facture, create_task, delete_customer, delete_facture, lister_customer,\
     retrieve_facture, retrieve_factures, send_facture
 from dotenv import load_dotenv
 
@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     'command',
     help="Command to execute",
-    choices=['create', 'send', 'delete', 'retrieve']
+    choices=['create', 'send', 'delete', 'retrieve', 'lister']
 )
 
 parser.add_argument(
@@ -56,3 +56,6 @@ if __name__ == '__main__':
 
         if args.option == 'facture':
             delete_facture(args.facture, cus=args.customer, date=args.date)
+    elif args.command == 'lister':
+        if args.option == 'customer':
+            lister_customer()
