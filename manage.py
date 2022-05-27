@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 import argparse
-from mars import create_customer, create_facture, create_task, delete_customer, delete_facture, lister_customer,\
+from mars import create_customer, create_facture, create_task, delete_customer, delete_facture, lister_customer, lister_facture, lister_task,\
     retrieve_facture, retrieve_factures, send_facture
 from dotenv import load_dotenv
 
@@ -59,3 +59,7 @@ if __name__ == '__main__':
     elif args.command == 'lister':
         if args.option == 'customer':
             lister_customer()
+        elif args.option == 'task':
+            lister_task()
+        elif args.option == 'facture':
+            lister_facture()

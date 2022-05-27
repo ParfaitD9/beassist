@@ -139,10 +139,24 @@ def create_customer():
 
 
 def lister_customer():
-    customers = [customer for customer in Customer.select()]
+    customers: list[Customer] = [customer for customer in Customer.select()]
 
     print(tabulate([[cus.pk, cus.name, cus.phone]
           for cus in customers], headers=['ID', 'Nom', 'Contact'], tablefmt='orgtbl'))
+
+
+def lister_task():
+    tasks: list[Task] = [task for task in Task.select()]
+
+    print(tabulate([[task.pk, task.name, task.customer]
+          for task in tasks], headers=['ID', 'Nom', 'Client'], tablefmt='orgtbl'))
+
+
+def lister_facture():
+    factures: list[Facture] = [facture for facture in Facture.select()]
+
+    print(tabulate([[fac.hash, fac.customer, fac.date] for fac in factures], headers=[
+          'Hash', 'Client', 'Date'], tablefmt='orgtbl'))
 
 
 def create_task():
