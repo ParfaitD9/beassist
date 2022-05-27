@@ -66,12 +66,12 @@
             <div class="elastic column end" >
                 <h2 style="font-weight:lighter;">Facture : {{facture}}</h2>
                 <p>{{date}}</p>
-                <p>Object : Facture pour {{task.name}}</p>
+                <p>Object : Facture pour {{obj}}</p>
             </div>
         </div>
         <div style="margin-top: 2.5em;">
             <p>{{client.name}}</p>
-            <p>{{client.adress}}</p>
+            <p>{{client.addresse}}</p>
             <p>Tel : {{client.phone}}</p>
             <p>{{client.email}}</p>
         </div>
@@ -86,21 +86,23 @@
                     <td>-{{admin.name}}-</td>
                     <td class="border-left"></td>
                 </tr>
+                {% for task in tasks %}
                 <tr>
                     <td>{{task.name}}</td>
-                    <td class="border-left"></td>
+                    <td class="border-left">{{task.price}}$</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td></td>
+                    <td class="border-left">Sous-total : {{ht}} $</td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td class="border-left">Sous-total : {{task.price}}$</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td class="border-left">Taxes : {{task.taxes()}} $</td>
+                    <td class="border-left">Taxes : {{taxes}} $</td>
                 </tr>
                 <tr>
                     <td>Numero de TPS / TVQ : {{tvs}}</td>
-                    <td class="border-left">Total : {{round(task.price + task.taxes(), 2)}}$</td>
+                    <td class="border-left">Total : {{ht+taxes}} $</td>
                 </tr>
                 
             </table>

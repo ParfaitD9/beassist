@@ -56,14 +56,31 @@ C'est le hash de la facture sur laquelle vous voulez opérer.
 Il est sous le format XXXX-YYYY-(C|I|R)
 '''
 )
-
+parser.add_argument(
+    '--date1',
+    '-d1',
+    help='''
+Sélectionner les tâches à partir de cette date.
+'''
+)
+parser.add_argument(
+    '--obj',
+    '-o',
+    help='''
+Objet de la facture
+'''
+)
 args = parser.parse_args()
 
 if __name__ == '__main__':
     load_dotenv()
     if args.command == 'create':
         if args.option == 'facture':
-            mars.create_facture(args.customer, args.date)
+            if args.date1:
+                mars.create_facture(args.customer, args.obj,
+                                    args.date1, args.date)
+            else:
+                mars.create_facture(args.customer, args.obj, args.date)
         elif args.option == 'customer':
             mars.create_customer()
         elif args.option == 'task':

@@ -16,27 +16,41 @@ from tabulate import tabulate
 from mailer import gmail_authenticate, send_message
 
 
-def create_facture(client: int, tmp: str):
+def create_facture(client: int, obj: str, tmp: str, fin=None):
     _tmp: dt = dp.parse(tmp)
+    today = dt.today().strftime('%Y-%m-%d')
+
+    if fin:
+        _fin: dt = dp.parse(fin)
     try:
         client: Customer = Customer.get(Customer.pk == client)
-        task: Task = Task.get(Task.customer == client.pk,
-                              Task.executed_at == _tmp)
+        if fin:
+            print(f'Tâches du {_tmp} au {_fin}')
+            tasks = Task.select().where((_tmp <= Task.executed_at <= _fin)
+                                        & (Task.customer == client)
+                                        & (Task.facture is None)
+                                        )
+        else:
+            print(f'Tâches du {_tmp}')
+            tasks = Task.select().where((Task.executed_at == _tmp)
+                                        & (Task.customer == client)
+                                        & (Task.facture is None)
+                                        )
     except Exception as e:
         print("One or multiple args seems invalid")
         return
     _hash = hb.blake2b(
-        f'{client.pk}#{tmp}'.encode(),
+        (f'{client.pk}#{tmp}:{fin}' if fin else f'{client.pk}#{tmp}').encode(),
         digest_size=2,
         salt=b'#d$fe2ad'
     ).hexdigest()
     _hash = f'{_hash}-2022-C'
 
-    if task:
+    if tasks:
         with open('templates/facture.html') as f:
             t: Template = Template(f.read())
             ctx = {
-                'task': task,
+                'tasks': tasks,
                 'client': client,
                 'admin': Customer(
                     name=os.environ.get('ADMIN_FULLNAME'),
@@ -47,9 +61,11 @@ def create_facture(client: int, tmp: str):
                 ),
                 'nas': os.environ.get('ADMIN_NAS'),
                 'tvs': os.environ.get('ADMIN_TVS'),
-                'date': dt.today().strftime('%Y-%m-%d'),
+                'date': today,
                 'facture': _hash,
-                'round': round
+                'obj': obj,
+                'ht': sum([task.price for task in tasks]),
+                'taxes': round(sum([task.price for task in tasks])*0.1497, 2)
             }
             t = t.render(ctx)
             try:
@@ -57,16 +73,33 @@ def create_facture(client: int, tmp: str):
             except Exception as e:
                 print(e.__class__)
             else:
+                print(f'{_hash}, {client.pk}, {today}, {obj}')
                 try:
-                    Facture.create(
-                        hash=_hash, customer_id=client, date=dt.today()
+                    f = Facture.create(
+                        hash=_hash,
+                        customer_id=client.pk,
+                        date=today,
+                        obj=obj,
                     )
                 except (pw.IntegrityError,) as e:
                     print("Same facture seems already exists.")
                 else:
+                    if fin:
+                        query = Task.update(facture=f).where(
+                            (_tmp <= Task.executed_at <= _fin) & (
+                                Task.customer == client)
+                            & (Task.facture is None)
+                        )
+                    else:
+                        query = Task.update(facture=f).where(
+                            (Task.executed_at == _tmp) & (
+                                Task.customer == client)
+                            & (Task.facture is None)
+                        )
+                    query.execute()
                     print(f"Facture {_hash} generated")
     else:
-        print("Task not found for this customer and this day.")
+        print("Pas de tâches non facturés trouvées pour cette date ou cet intervalle")
 
 
 def send_facture(facture: str):
@@ -104,32 +137,38 @@ Lavage de vitres - Solutions durables et R&D
 
 def create_customer():
     print('='*30+"CRÉATION D'UN CLIENT"+'='*30)
+    print('SI VOUS NE CONNAISSEZ PAS UNE VALEUR, TAPEZ ENTRÉE ET CONTINUEZ')
     name = input('Saisissez le nom du client : ')
-    adress = input("Saissisez l'adresse du client : ")
-    phone = input("Saissisez le numéro du client : ")
+    porte = int(input("Saissisez le numéro de porte du client : "))
+    street = input('Saisissez la rue du client : ')
     city = input("Saisissez la ville du client : ")
+    try:
+        appart = int(input("Saisissez l'appartement du client : "))
+    except ValueError:
+        appart = 0
+    postal = input("Saisissez le code postal du client : ")
+    province = input("Saisissez la province du client : ")
     email = input(
         "Saisissez le mail du client (laissez un vide si non disponible) : ")
-    print('='*40)
+    phone = input("Saissisez le téléphone du client : ")
     infos = {
-        'nom': name,
-        'adresse': adress,
-        'Téléphone': phone,
-        'Ville': city,
-        'Email': email
+        'name': name,
+        'porte': porte,
+        'street': street,
+        'city': city,
+        'appart': appart if appart else None,
+        'postal': postal,
+        'province': province if province else 'Québec',
+        'email': email if email else None,
+        'phone': phone if phone else None
     }
-    pprint.pprint(infos)
+    print('='*40)
+    # pprint.pprint()
     valid = input(
-        "Voulez-vous créez un client avec ces informations ? (O/n) : ")
+        f"Voulez-vous créez un client avec ces informations \n {infos} \n ? (O/n) : ")
     if valid == 'O':
         try:
-            c = Customer.create(
-                name=name,
-                adress=adress,
-                phone=phone,
-                city=city,
-                email=email if email else None
-            )
+            c = Customer.create(**infos)
         except Exception as e:
             print(e)
         else:
@@ -139,29 +178,26 @@ def create_customer():
 
 
 def lister_customer():
-    customers: list[Customer] = [customer for customer in Customer.select()]
-
     print(tabulate([[cus.pk, cus.name, cus.phone]
-          for cus in customers], headers=['ID', 'Nom', 'Contact'], tablefmt='orgtbl'))
+          for cus in Customer.select()], headers=['ID', 'Nom', 'Contact'], tablefmt='orgtbl'))
 
 
 def lister_task():
-    tasks: list[Task] = [task for task in Task.select()]
-
     print(tabulate([[task.pk, task.name, task.customer]
-          for task in tasks], headers=['ID', 'Nom', 'Client'], tablefmt='orgtbl'))
+          for task in Task.select()], headers=['ID', 'Nom', 'Client'], tablefmt='orgtbl'))
 
 
 def lister_facture():
-    factures: list[Facture] = [facture for facture in Facture.select()]
-
-    print(tabulate([[fac.hash, fac.customer, fac.date] for fac in factures], headers=[
+    print(tabulate([[fac.hash, fac.customer, fac.date] for fac in Facture.select()], headers=[
           'Hash', 'Client', 'Date'], tablefmt='orgtbl'))
 
 
 def create_task():
     name = input('Quelle tâche avez vous effectuez ? : ')
     price = float(input('Quelle est son coût ? : '))
+    _date = dp.parse(
+        input('À quelle date avez vous réaliser cette tâche ?: ')
+    ).date()
     customer_id = (
         input('À quelle client ? (Vous pouvez saisir le nom où l\'id) : '))
     try:
@@ -173,8 +209,6 @@ def create_task():
         print('Désolé, ce utilisateur semble ne pas exister')
         sys.exit()
 
-    _date = dp.parse(
-        input('À quelle date avez vous réaliser cette tâche ?: ')).date()
     t = {
         'name': name,
         'price': price,
