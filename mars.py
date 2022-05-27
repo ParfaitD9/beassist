@@ -183,13 +183,13 @@ def lister_customer():
 
 
 def lister_task():
-    print(tabulate([[task.pk, task.name, task.customer]
-          for task in Task.select()], headers=['ID', 'Nom', 'Client'], tablefmt='orgtbl'))
+    print(tabulate([[task.pk, task.name, task.customer, 'Oui' if task.facture else 'Non']
+          for task in Task.select()], headers=['ID', 'Nom', 'Client', 'Facturé ?'], tablefmt='orgtbl'))
 
 
 def lister_facture():
-    print(tabulate([[fac.hash, fac.customer, fac.date] for fac in Facture.select()], headers=[
-          'Hash', 'Client', 'Date'], tablefmt='orgtbl'))
+    print(tabulate([[fac.hash, fac.customer, fac.date, 'Oui' if fac.sent else 'Non'] for fac in Facture.select()], headers=[
+          'Hash', 'Client', 'Date', 'Envoyé ?'], tablefmt='orgtbl'))
 
 
 def create_task():
