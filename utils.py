@@ -1,9 +1,11 @@
-import csv
 import re
-from orm import db, Customer
+from orm import Facture, Task, db, Customer
+from datetime import date as dte
+from tabulate import tabulate
+import dateparser as dp
 
 
-def load_py(obj: list):
+def load_client_py(obj: list):
     with db.atomic():
         for nom, addr, phone, region, _, _, mail, _ in obj:
             bloc, city, postal = addr.split(', ')
@@ -40,6 +42,42 @@ def load_py(obj: list):
             c = Customer.create(**infos)
 
             print(f'{c} created')
+
+
+def load_task_py(obj):
+    with db.atomic():
+        for nom, _, _, _, cout, travaux, _, _ in obj:
+            cus = Customer.get(name=nom)
+            t = Task.create(
+                name=travaux[:20],
+                price=float(cout),
+                executed_at=dte.today(),
+                customer=cus
+            )
+
+            print(f'Task {nom} created')
+
+
+def make_point(debut=None, fin=None):
+    if debut and fin:
+        debut, fin = dp.parse(debut), dp.parse(fin)
+        inter = Facture.select().where(debut <= Facture.date <= fin).order_by('date')
+    else:
+        inter = Facture.select().order_by('date')
+
+    cout = sum(
+        [facture.cout for facture in inter]
+    )
+    nb = inter.count()
+    print(
+        tabulate([[facture.date, facture.obj, facture.customer, facture.cout]
+                  for facture in inter],
+                 headers=['Date', 'Objet', 'Client', 'Coût'],
+                 tablefmt='orgtbl'
+                 )
+    )
+
+    return (cout, nb)
 
 
 if __name__ == '__main__':
