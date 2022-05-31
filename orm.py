@@ -258,6 +258,10 @@ class Task(BaseModel):
         print(tabulate(_tasks, headers=[
               'ID', 'Nom', 'Client', 'Date', 'Facturé ?'], tablefmt='orgtbl'))
 
+    def defacturer(self):
+        self.facture = None
+        self.save()
+
     def __str__(self):
         return f'{self.name} for {self.customer}'
 
