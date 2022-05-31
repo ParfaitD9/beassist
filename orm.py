@@ -49,6 +49,19 @@ class Customer(BaseModel):
     def billet(self) -> str:
         return self.addresse() + self.postal
 
+    def facture_him(self, obj: str):
+        tasks = Task.select().where(
+            (Task.customer == self) &
+            (Task.facture == None)
+        ).order_by('-date')
+
+        Facture.generate(
+            self.pk,
+            obj,
+            '2022-01-01',
+            dt.today().strftime('%Y-%m-%d')
+        )
+
     def __str__(self):
         return self.name
 
@@ -84,17 +97,18 @@ class Facture(BaseModel):
         try:
             client: Customer = Customer.get(Customer.pk == client)
             if fin:
+                exp = ((_tmp <= Task.executed_at <= _fin)
+                       & (Task.customer == client)
+                       & (Task.facture == None))
                 print(f'Tâches du {_tmp} au {_fin}')
-                tasks = Task.select().where((_tmp <= Task.executed_at <= _fin)
-                                            & (Task.customer == client)
-                                            & (Task.facture == None)
-                                            )
+
             else:
                 print(f'Tâches du {_tmp}')
-                tasks = Task.select().where((Task.executed_at == _tmp)
-                                            & (Task.customer == client)
-                                            & (Task.facture == None)
-                                            )
+                exp = ((Task.executed_at == _tmp)
+                       & (Task.customer == client)
+                       & (Task.facture == None))
+
+            tasks = Task.select().where(exp)
         except Exception as e:
             print("One or multiple args seems invalid")
             return
@@ -124,7 +138,7 @@ class Facture(BaseModel):
                     'facture': _hash,
                     'obj': obj,
                     'ht': sum([task.price for task in tasks]),
-                    'taxes': sum([task.price for task in tasks])*0.14975
+                    'taxes': round(sum([task.price for task in tasks])*0.14975, 2)
                 }
                 t = t.render(ctx)
                 cout = sum([task.price for task in tasks])
@@ -144,20 +158,11 @@ class Facture(BaseModel):
                     except (pw.IntegrityError,) as e:
                         print("Same facture seems already exists.")
                     else:
-                        if fin:
-                            query = Task.update(facture=f).where(
-                                (_tmp <= Task.executed_at <= _fin) & (
-                                    Task.customer == client)
-                                & (Task.facture == None)
-                            )
-                        else:
-                            query = Task.update(facture=f).where(
-                                (Task.executed_at == _tmp) & (
-                                    Task.customer == client)
-                                & (Task.facture == None)
-                            )
+                        query = Task.update(facture=f).where(exp)
                         query.execute()
                         print(f"Facture {_hash} generated")
+
+                        return f
         else:
             print("Pas de tâches non facturés trouvées pour cette date ou cet intervalle")
 
@@ -170,8 +175,10 @@ class Facture(BaseModel):
 
         Le format idéal YYYY-MM-DD
         '''
+
         if debut and fin:
             debut, fin = dp.parse(debut), dp.parse(fin)
+            print(f'Factures du {debut} au {fin}')
             facs = [[fac.hash, fac.customer, fac.date, 'Oui' if fac.sent else 'Non']
                     for fac in Facture.select().where(debut <= Facture.date <= fin)]
         else:
@@ -179,6 +186,22 @@ class Facture(BaseModel):
                      'Oui' if fac.sent else 'Non'] for fac in Facture.select()]
         print(tabulate(facs, headers=[
             'Hash', 'Client', 'Date', 'Envoyé ?'], tablefmt='orgtbl'))
+
+    @staticmethod
+    def sendall(debut=None, fin=None):
+        if debut and fin:
+            debut = dp.parse(debut)
+            fin = dp.parse(fin)
+            inter = Facture.select().where(
+                (Facture.sent == False) &
+                (debut <= Facture.date <= fin)
+            ).order_by('-date')
+        else:
+            inter = Facture.select().where(Facture.sent == False).order_by('-date')
+
+        for facture in inter:
+            facture: Facture
+            facture.send()
 
     def regenerate(self):
         _hash = self.hash.split('-')[0]
