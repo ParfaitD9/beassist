@@ -21,3 +21,40 @@ $(document).ready(function () {
     }
   });
 });
+let hr = new XMLHttpRequest();
+let field = document.querySelector("select#customers");
+if (field) {
+  $.get({
+    url: "/api/customers",
+    dataType: "json",
+  })
+    .done((res) => {
+      res.forEach((element) => {
+        let opt = document.createElement("option");
+        opt.value = element.pk;
+        opt.text = element.name;
+        field.appendChild(opt);
+      });
+    })
+    .fail((err) => {
+      console.log(err);
+    });
+}
+
+let tasks = document.querySelector("datalist#tasks");
+if (tasks) {
+  $.get({
+    url: "/api/tasks",
+    dataType: "json",
+  })
+    .done((res) => {
+      res.forEach((element) => {
+        let opt = document.createElement("option");
+        opt.text = element.name;
+        tasks.appendChild(opt);
+      });
+    })
+    .fail((err) => {
+      console.log(err);
+    });
+}

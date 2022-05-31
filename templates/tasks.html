@@ -8,8 +8,8 @@
 		  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				<li><a href="/customers">Clients</a></li>
-			  <li><a href="/factures">Factures</a></li>
-			  <li><a href="/tasks">Tâches</a></li>
+				<li><a href="/tasks">Tâches</a></li>
+			  	<li><a href="/factures">Factures</a></li>
 			</ul>  
 		  </div><!-- /.navbar-collapse -->
 		</div><!-- /.container-fluid -->
@@ -43,7 +43,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{% for task in tasks[::-1] %}
+				{% for task in tasks %}
 				<tr id="{{task.pk}}">
 					<td>
 						<span class="custom-checkbox">
@@ -57,8 +57,8 @@
 					<td>{{task.customer}}</td>
 					<td>{{task.facture.hash}}</td>
 					<td>
-						<a href="#editTaskModal" id="task-{{task.pk}}" class="edit" data-toggle="modal"><i class="bi bi-pencil-square" data-toggle="tooltip" title="Edit"></i></a>
-						<a href="#deleteTaskModal" class="delete" data-toggle="modal"><i class="bi bi-trash3" data-toggle="tooltip" title="Delete"></i></a>
+						<a href="#editTaskModal" class="edit" data-toggle="modal"><i class="bi bi-pencil-square" data-toggle="tooltip" title="Edit"></i></a>
+						<a href="#deleteTaskModal" class="delete"><i class="bi bi-trash3" data-toggle="tooltip" title="Delete"></i></a>
 					</td>
 				</tr>
 				{% endfor %}
@@ -107,7 +107,7 @@
 					</div>
 					<div class="form-group">
 						<label>Client</label>
-						<select name="customer" id="customers" multiple class="form-control">
+						<select name="customer" id="customers" class="form-control">
 						</select>
 					</div>
 				</div>
@@ -175,4 +175,6 @@
 		</div>
 	</div>
 </div>
+<script src="/static/tasks.js"></script>
+
 {% endblock %}

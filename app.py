@@ -1,4 +1,4 @@
-from asyncio import FastChildWatcher
+import peewee as pw
 from flask import Flask,\
     render_template, request, jsonify
 from orm import Customer, Facture, Task
@@ -44,7 +44,7 @@ def get_customers():
 
 @app.route('/tasks')
 def tasks():
-    tasks = Task.select().order_by(Task.executed_at.asc())
+    tasks = Task.select().order_by(Task.executed_at.desc())
     return render_template('tasks.html', tasks=tasks)
 
 
@@ -71,14 +71,39 @@ def c_task():
         })
 
 
+@app.route('/delete/task/<int:pk>', methods=['POST'])
+def d_task(pk):
+    try:
+        t: Task = Task.get(pk=pk)
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Tâche non existante'
+        })
+    else:
+        if not t.facture:
+            t.delete_instance()
+            return jsonify({
+                'success': True,
+                'data': {
+                    'name': t.name,
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Tâche déjà facturée'
+            })
+
+
 @app.route('/api/tasks')
 def get_tasks():
-    return jsonify([{'pk': t.pk, 'name': t.name} for t in Task.select().order_by(Task.executed_at.asc())])
+    return jsonify([{'pk': t.pk, 'name': t.name} for t in Task.select().order_by(Task.executed_at.desc())])
 
 
 @app.route('/factures')
 def factures():
-    return render_template('factures.html', factures=Facture.select().order_by(Facture.date.asc()))
+    return render_template('factures.html', factures=Facture.select().order_by(Facture.date.desc()))
 
 
 @app.route('/create/facture', methods=['POST'])
@@ -91,6 +116,11 @@ def c_facture():
             request.form.get('start_at'),
             request.form.get('end_at')
         )
+        if not f:
+            return {
+                'success': False,
+                'message': 'Facture non générée'
+            }
     except (Exception, ) as e:
         print(f'{e} : {e.args[0]}')
         return {
@@ -112,7 +142,13 @@ def send_facture():
         hash=request.args.get('facture')
     )
     try:
-        facture.send()
+        if not facture.sent:
+            facture.send()
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Facture déja envoyée'
+            })
     except (Exception, ) as e:
         return jsonify({
             'success': False,

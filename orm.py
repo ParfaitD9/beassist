@@ -148,6 +148,7 @@ class Facture(BaseModel):
                     print(e.__class__)
                 else:
                     try:
+                        print(_hash)
                         f = Facture.create(
                             hash=_hash,
                             customer_id=client.pk,
