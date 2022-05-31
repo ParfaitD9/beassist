@@ -44,13 +44,14 @@ def get_customers():
 
 @app.route('/tasks')
 def tasks():
-    tasks = Task.select().order_by('executed_at')
+    tasks = Task.select().order_by(Task.executed_at.asc())
     return render_template('tasks.html', tasks=tasks)
 
 
 @app.route('/create/task', methods=['POST'])
 def c_task():
     r = dict(request.form)
+    print(r)
     try:
         t = Task.create(**r)
     except (Exception,) as e:
@@ -72,12 +73,12 @@ def c_task():
 
 @app.route('/api/tasks')
 def get_tasks():
-    pass
+    return jsonify([{'pk': t.pk, 'name': t.name} for t in Task.select().order_by(Task.executed_at.asc())])
 
 
 @app.route('/factures')
 def factures():
-    return render_template('factures.html', factures=Facture.select())
+    return render_template('factures.html', factures=Facture.select().order_by(Facture.date.asc()))
 
 
 @app.route('/create/facture', methods=['POST'])

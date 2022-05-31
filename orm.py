@@ -209,10 +209,11 @@ class Facture(BaseModel):
                         f'./compta/{self.customer.name}-{_hash}.pdf')
 
     def send(self):
-        u: Customer = Customer.get(Customer.pk == self.customer)
-        receiver = u.email
-        srv = gmail_authenticate()
-        body = '''
+        if not self.sent:
+            u: Customer = Customer.get(Customer.pk == self.customer)
+            receiver = u.email
+            srv = gmail_authenticate()
+            body = '''
     Bonjour cher client,
 Vous trouverez ci-joint la facturation des travaux effectués sur votre terrain entre
 le 15 et le 28 Avril 2022.
@@ -225,21 +226,27 @@ Entretien Excellence & Cie
             
 Lavage de vitres - Solutions durables et R&D
 514 268 4393
-    '''
-        try:
-            r = send_message(
-                srv,
-                receiver,
-                'Facture de la part de Excellence Entretien',
-                body,
-                [f'./docs/{self.hash}.pdf']
-            )
-        except (Exception,) as e:
-            print(f'{e} sending mail to {receiver}')
+        '''
+            try:
+                r = send_message(
+                    srv,
+                    receiver,
+                    'Facture de la part de Excellence Entretien',
+                    body,
+                    [f'./docs/{self.hash}.pdf']
+                )
+            except (Exception,) as e:
+                print(f'{e} sending mail to {receiver}')
+            else:
+                self.sent = True
+                self.save()
+                print(
+                    f'Facture {self.hash} send to {receiver}. \n Code: \n {r}')
+
+                return True
         else:
-            self.sent = True
-            self.save()
-            print(f'Facture {self.hash} send to {receiver}. \n Code: \n {r}')
+            print('Facture déjà envoyé')
+            return False
 
     def delete_(self):
         self.delete_instance()

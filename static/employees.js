@@ -16,7 +16,21 @@ if (field) {
         field.appendChild(opt);
       });
     }
-    console.log("Je sais pas");
+  };
+}
+
+var tasks = document.querySelector("datalist#tasks");
+if (tasks) {
+  hr.open("GET", "/api/tasks");
+  hr.send();
+  hr.onreadystatechange = (e) => {
+    if (hr.readyState === 4) {
+      JSON.parse(hr.responseText).forEach((element) => {
+        let opt = document.createElement("option");
+        opt.text = element.name;
+        tasks.appendChild(opt);
+      });
+    }
   };
 }
 
