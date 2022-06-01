@@ -21,7 +21,9 @@ $(document).ready(function () {
     }
   });
 });
+
 let hr = new XMLHttpRequest();
+
 let field = document.querySelector("select#customers");
 if (field) {
   $.get({
@@ -57,4 +59,30 @@ if (tasks) {
     .fail((err) => {
       console.log(err);
     });
+}
+
+function showAlert(res) {
+  let block = document.querySelector("div#alert");
+  let container = document.body.querySelector(".container");
+  if (block) {
+    container.removeChild(block);
+  }
+
+  let msg = document.createElement("div");
+  msg.id = "alert";
+  msg.classList.add("alert");
+
+  container.appendChild(msg);
+  if (res.success) {
+    msg.classList.remove("alert-danger");
+    msg.classList.add("alert-success");
+  } else {
+    msg.classList.remove("alert-success");
+    msg.classList.add("alert-danger");
+  }
+  msg.textContent = `${res.message}`;
+}
+
+function getElementByName(name, block) {
+  return block.getElementsByName(name)[0];
 }

@@ -91,9 +91,7 @@ def d_task(pk):
             t.delete_instance()
             return jsonify({
                 'success': True,
-                'data': {
-                    'name': t.name,
-                }
+                'message': f'Tâche {t.name} bien supprimée'
             })
         else:
             return jsonify({
@@ -115,10 +113,7 @@ def defacture_task(pk):
         f.defacturer()
         return jsonify({
             'success': True,
-            'data': {
-                'pk': pk,
-                'name': f.name
-            }
+            'message': "Tâche bien défacturée"
         })
 
 
@@ -163,9 +158,9 @@ def c_facture():
 
 
 @app.route('/delete/facture/<hash>', methods=['POST'])
-def d_facture(hash):
+def d_facture(hash: str):
     try:
-        f: Facture = Facture.get(hash=hash)
+        f: Facture = Facture.get(hash=hash.split('-', maxsplit=1)[-1])
     except (pw.DoesNotExist,) as e:
         return jsonify({
             'success': False,
@@ -176,9 +171,7 @@ def d_facture(hash):
             f.delete_instance()
             return jsonify({
                 'success': True,
-                'data': {
-                    'hash': f.hash
-                }
+                'message': 'Facture bien supprimée'
             })
         else:
             return jsonify({
@@ -193,14 +186,14 @@ def view(hash):
     return redirect(f'file://{p}')  # render_template('view.html', hash=hash)
 
 
-@app.route('/send')
+@app.route('/send', methods=['POST'])
 def send_facture():
     facture: Facture = Facture.get(
-        hash=request.args.get('facture')
+        hash=request.form.get('facture')
     )
     try:
         if not facture.sent:
-            facture.send()
+            facture.send(request.form.get('message').strip())
         else:
             return jsonify({
                 'success': False,
@@ -214,10 +207,7 @@ def send_facture():
     else:
         return jsonify({
             'success': True,
-            'data': {
-                'hash': facture.hash,
-                'customer': facture.customer.email,
-            }
+            'message': f'Facture {facture.hash} bien envoyée'
         })
 
 

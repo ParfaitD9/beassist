@@ -209,25 +209,12 @@ class Facture(BaseModel):
         shutil.copyfile(f'./docs/{self.hash}.pdf',
                         f'./compta/{self.customer.name}-{_hash}.pdf')
 
-    def send(self):
+    def send(self, corps):
         if not self.sent:
             u: Customer = Customer.get(Customer.pk == self.customer)
             receiver = u.email
             srv = gmail_authenticate()
-            body = '''
-    Bonjour cher client,
-Vous trouverez ci-joint la facturation des travaux effectués sur votre terrain entre
-le 15 et le 28 Avril 2022.
-
-Si vous voyez des erreurs, s'il vous plaît communiquer avec moi.
-
-Bien à vous
-Marc-Antoine Cloutier
-Entretien Excellence & Cie
-            
-Lavage de vitres - Solutions durables et R&D
-514 268 4393
-        '''
+            body = corps
             try:
                 r = send_message(
                     srv,

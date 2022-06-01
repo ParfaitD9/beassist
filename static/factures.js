@@ -24,35 +24,19 @@ $("#addFactureModalForm").submit((e) => {
   };
 });
 
-$("a#sendFacture").click((e) => {
+$("#editFactureModalForm").submit((e) => {
   e.preventDefault();
-  let hash = e.target.parentNode.parentNode.parentNode.id;
-  $.get(`/send?facture=${hash}`)
-    .done((res) => {
-      let container = document.querySelector(".container");
-      let block = document.querySelector("div#sending");
-
-      if (block) {
-        container.removeChild(block);
-      }
-
-      let msg = document.createElement("div");
-      msg.id = "sending";
-      msg.classList.add("alert");
-      if (res.success) {
-        msg.classList.remove("alert-danger");
-        msg.classList.add("alert-success");
-        msg.textContent = `Facture ${res.hash} envoyée à ${res.customer}`;
-      } else {
-        msg.classList.remove("alert-success");
-        msg.classList.add("alert-danger");
-        msg.textContent = `${res.message}`;
-      }
-      container.appendChild(msg);
-    })
-    .fail((err) => {
-      console.log(err);
-    });
+  console.log("<Submited");
+  let datas = new FormData(document.querySelector("form#editFactureModalForm"));
+  datas.append("facture", document.querySelector("span#hash").textContent);
+  hr.open("POST", "/send");
+  hr.onreadystatechange = (e) => {
+    if (hr.readyState === 4) {
+      res = JSON.parse(hr.responseText);
+      showAlert(res);
+    }
+  };
+  hr.send(datas);
 });
 
 $("a.delete").click((e) => {
@@ -60,27 +44,27 @@ $("a.delete").click((e) => {
   let hash = e.target.parentNode.parentNode.parentNode.id;
   $.post(`/delete/facture/${hash}`)
     .done((res) => {
-      let block = document.querySelector("div#sending");
-      if (block) {
-        document.body.querySelector(".container").removeChild(block);
-      }
-
-      let msg = document.createElement("div");
-      msg.id = "sending";
-      msg.classList.add("alert");
-
-      document.body.querySelector(".container").appendChild(msg);
-      if (res.success) {
-        msg.classList.remove("alert-danger");
-        msg.classList.add("alert-success");
-        msg.textContent = `Facture ${res.data.hash} supprimée`;
-      } else {
-        msg.classList.remove("alert-success");
-        msg.classList.add("alert-danger");
-        msg.textContent = `${res.message}`;
-      }
+      showAlert(res);
     })
     .fail((err) => {
       console.log(err);
     });
 });
+
+function getRowInfos(rowId) {
+  let row = document.querySelector(`tr#${rowId}`);
+  let fields = row.getElementsByTagName("td");
+  return {
+    hash: fields[1].textContent,
+    customer: fields[2].textContent,
+    date: fields[3].textContent,
+    price: fields[5].textContent,
+  };
+}
+
+$("a.edit").click((e) => {
+  let infos = getRowInfos(e.target.parentNode.parentNode.parentNode.id);
+  document.querySelector("span#hash").textContent = infos.hash;
+});
+
+function sendMail(datas) {}

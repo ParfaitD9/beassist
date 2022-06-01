@@ -1,6 +1,3 @@
-const selectid = document.getElementById;
-//const select = document.querySelector;
-
 $("#addEmployeeModalForm").submit((e) => {
   let form = document.getElementById("addEmployeeModalForm");
   e.preventDefault();

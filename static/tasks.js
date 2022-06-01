@@ -29,25 +29,7 @@ $("a.delete").click((e) => {
     url: `/delete/task/${_id}`,
     dataType: "json",
   }).then((res) => {
-    let block = document.querySelector("div#sending");
-    if (block) {
-      document.body.querySelector(".container").removeChild(block);
-    }
-
-    let msg = document.createElement("div");
-    msg.id = "sending";
-    msg.classList.add("alert");
-    if (res.success) {
-      msg.classList.remove("alert-danger");
-      msg.classList.add("alert-success");
-      msg.textContent = `Tâche ${res.data.name} supprimée`;
-    } else {
-      msg.classList.remove("alert-success");
-      msg.classList.add("alert-danger");
-      msg.textContent = `Erreur ${res.message} lors de la suppression de tâche`;
-    }
-    document.body.querySelector(".container").appendChild(msg);
-    console.log(res);
+    showAlert(res);
   });
 });
 
@@ -59,25 +41,7 @@ $("a.edit").click((e) => {
     dataType: "json",
   })
     .done((res) => {
-      let block = document.querySelector("div#sending");
-      if (block) {
-        document.body.querySelector(".container").removeChild(block);
-      }
-
-      let msg = document.createElement("div");
-      msg.id = "sending";
-      msg.classList.add("alert");
-
-      document.body.querySelector(".container").appendChild(msg);
-      if (res.success) {
-        msg.classList.remove("alert-danger");
-        msg.classList.add("alert-success");
-        msg.textContent = `Tâche ${res.data.name} défacturée`;
-      } else {
-        msg.classList.remove("alert-success");
-        msg.classList.add("alert-danger");
-        msg.textContent = `${res.message}`;
-      }
+      showAlert(res);
     })
     .fail((err) => {
       console.log(err);
