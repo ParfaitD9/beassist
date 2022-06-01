@@ -1,11 +1,11 @@
-import os
-from orm import db, Customer, Task, Facture
+from orm import db, Customer, Task, Facture,\
+    Pack, PackSubTask, SubTask
 
 if __name__ == '__main__':
     try:
         db.connect()
-        db.drop_tables([Customer, Task, Facture])
-        db.create_tables([Customer, Task, Facture])
+        db.drop_tables([Customer, Task, Facture, Pack, PackSubTask, SubTask])
+        db.create_tables([Customer, Task, Facture, Pack, PackSubTask, SubTask])
         db.close()
     except Exception as e:
         print(e, 'during database creation')

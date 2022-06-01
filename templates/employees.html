@@ -10,6 +10,7 @@
 				<li><a href="/customers">Clients</a></li>
 				<li><a href="/tasks">Tâches</a></li>
 			  	<li><a href="/factures">Factures</a></li>
+				<li><a href="/subtasks">Sous-tâches</a></li>
 			</ul>  
 		  </div><!-- /.navbar-collapse -->
 		</div><!-- /.container-fluid -->
@@ -57,7 +58,7 @@
 					<td>{{client.phone}}</td>
 					<td>
 						<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="bi bi-file-earmark-arrow-up" data-toggle="tooltip" title="Facture"></i></a>
-						<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="bi bi-trash3" data-toggle="tooltip" title="Delete"></i></a>
+						<a href="#" class="delete" data-toggle="modal"><i class="bi bi-trash3" title="Delete"></i></a>
 					</td>
 				</tr>
 				{% endfor %}

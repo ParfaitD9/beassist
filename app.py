@@ -14,6 +14,7 @@ def home():
 
 @app.route('/customers')
 def customers():
+    page = int(request.args.get('page', 1))
     emps = Customer.select()
     return render_template('employees.html', customers=emps)
 
@@ -35,6 +36,23 @@ def c_customer():
                 'name': c.name,
                 'pk': c.pk
             }
+        })
+
+
+@app.route('/delete/customer/<int:pk>', methods=['POST'])
+def d_customer(pk):
+    try:
+        c: Customer = Customer.get(pk=pk)
+    except (pw.DoesNotExist,) as e:
+        return jsonify({
+            'success': False,
+            'message': f'Utilisateur non existant'
+        })
+    else:
+        c.delete_instance()
+        return jsonify({
+            'success': True,
+            'message': f'Utilisateur {c.name} bien supprimé'
         })
 
 
@@ -209,6 +227,11 @@ def send_facture():
             'success': True,
             'message': f'Facture {facture.hash} bien envoyée'
         })
+
+
+@app.route('/subtasks')
+def subtask():
+    return render_template('subtasks.html')
 
 
 if __name__ == '__main__':

@@ -285,3 +285,26 @@ class Task(BaseModel):
 
     def __repr__(self) -> str:
         return self.__str__()
+
+
+class SubTask(BaseModel):
+    pk = pw.IntegerField(primary_key=True)
+    name = pw.CharField()
+    value = pw.DecimalField(default=10.0)
+
+    def __str__(self):
+        return self.name
+
+
+class Pack(BaseModel):
+    pk = pw.IntegerField(primary_key=True)
+    name = pw.CharField()
+    customer = pw.ForeignKeyField(Customer, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class PackSubTask(BaseModel):
+    subtask = pw.ForeignKeyField(SubTask)
+    pack = pw.ForeignKeyField(Pack)

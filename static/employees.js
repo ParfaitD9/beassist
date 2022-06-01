@@ -23,3 +23,17 @@ $("#addEmployeeModalForm").submit((e) => {
     }
   };
 });
+
+$("a.delete").click((e) => {
+  e.preventDefault();
+  let hash = e.target.parentNode.parentNode.parentNode.id;
+  $.post({
+    url: `/delete/customer/${hash}`,
+  })
+    .done((res) => {
+      showAlert(res);
+    })
+    .fail((err) => {
+      console.log(err);
+    });
+});
