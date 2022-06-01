@@ -27,15 +27,13 @@ $("#addFactureModalForm").submit((e) => {
 $("a#sendFacture").click((e) => {
   e.preventDefault();
   let hash = e.target.parentNode.parentNode.parentNode.id;
-  hr.open("GET", `/send?facture=${hash}`);
-  hr.send();
-
-  hr.onreadystatechange = (e) => {
-    if (hr.readyState === 4) {
-      res = JSON.parse(hr.responseText);
+  $.get(`/send?facture=${hash}`)
+    .done((res) => {
+      let container = document.querySelector(".container");
       let block = document.querySelector("div#sending");
+
       if (block) {
-        document.body.removeChild(block);
+        container.removeChild(block);
       }
 
       let msg = document.createElement("div");
@@ -48,9 +46,41 @@ $("a#sendFacture").click((e) => {
       } else {
         msg.classList.remove("alert-success");
         msg.classList.add("alert-danger");
-        msg.textContent = `Erreur ${res.message} lors de l'envoi de la facture ${hash}`;
+        msg.textContent = `${res.message}`;
       }
-      document.body.appendChild(msg);
-    }
-  };
+      container.appendChild(msg);
+    })
+    .fail((err) => {
+      console.log(err);
+    });
+});
+
+$("a.delete").click((e) => {
+  e.preventDefault();
+  let hash = e.target.parentNode.parentNode.parentNode.id;
+  $.post(`/delete/facture/${hash}`)
+    .done((res) => {
+      let block = document.querySelector("div#sending");
+      if (block) {
+        document.body.querySelector(".container").removeChild(block);
+      }
+
+      let msg = document.createElement("div");
+      msg.id = "sending";
+      msg.classList.add("alert");
+
+      document.body.querySelector(".container").appendChild(msg);
+      if (res.success) {
+        msg.classList.remove("alert-danger");
+        msg.classList.add("alert-success");
+        msg.textContent = `Facture ${res.data.hash} supprimée`;
+      } else {
+        msg.classList.remove("alert-success");
+        msg.classList.add("alert-danger");
+        msg.textContent = `${res.message}`;
+      }
+    })
+    .fail((err) => {
+      console.log(err);
+    });
 });

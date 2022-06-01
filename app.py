@@ -1,14 +1,15 @@
 import peewee as pw
-from flask import Flask,\
+from flask import Flask, redirect,\
     render_template, request, jsonify
 from orm import Customer, Facture, Task
+import os
 
 app = Flask(__name__)
 
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return redirect('/customers')
 
 
 @app.route('/customers')
@@ -35,6 +36,11 @@ def c_customer():
                 'pk': c.pk
             }
         })
+
+
+@app.route('/facture/customer/<int:pk>')
+def f_customer():
+    pass
 
 
 @app.route('/api/customers')
@@ -96,6 +102,26 @@ def d_task(pk):
             })
 
 
+@app.route('/defacture/task/<int:pk>', methods=['POST'])
+def defacture_task(pk):
+    try:
+        f: Task = Task.get(pk=pk)
+    except (pw.DoesNotExist,) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Tâche non existante'
+        })
+    else:
+        f.defacturer()
+        return jsonify({
+            'success': True,
+            'data': {
+                'pk': pk,
+                'name': f.name
+            }
+        })
+
+
 @app.route('/api/tasks')
 def get_tasks():
     return jsonify([{'pk': t.pk, 'name': t.name} for t in Task.select().order_by(Task.executed_at.desc())])
@@ -134,6 +160,37 @@ def c_facture():
                 'customer': f.customer.pk
             }
         })
+
+
+@app.route('/delete/facture/<hash>', methods=['POST'])
+def d_facture(hash):
+    try:
+        f: Facture = Facture.get(hash=hash)
+    except (pw.DoesNotExist,) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Facture non existante'
+        })
+    else:
+        if not f.sent and not f.tasks:
+            f.delete_instance()
+            return jsonify({
+                'success': True,
+                'data': {
+                    'hash': f.hash
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Facture déjà envoyé ou toujours associée à des tâches'
+            })
+
+
+@app.route('/view/<hash>')
+def view(hash):
+    p = os.path.abspath(f'./docs/{hash}.pdf')
+    return redirect(f'file://{p}')  # render_template('view.html', hash=hash)
 
 
 @app.route('/send')

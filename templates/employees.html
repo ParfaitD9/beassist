@@ -52,11 +52,11 @@
 						</span>
 					</td>
 					<td>{{client.name}}</td>
-					<td>{{client.email}}</td>
-					<td>{{client.addresse()}}</td>
+					<td><a target="_blank" href="mailto:{{client.email}}">{{client.email}}</a></td>
+					<td>{{client.postal}}</td>
 					<td>{{client.phone}}</td>
 					<td>
-						<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="bi bi-pencil-square" data-toggle="tooltip" title="Edit"></i></a>
+						<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="bi bi-file-earmark-arrow-up" data-toggle="tooltip" title="Facture"></i></a>
 						<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="bi bi-trash3" data-toggle="tooltip" title="Delete"></i></a>
 					</td>
 				</tr>

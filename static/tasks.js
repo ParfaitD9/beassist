@@ -50,3 +50,36 @@ $("a.delete").click((e) => {
     console.log(res);
   });
 });
+
+$("a.edit").click((e) => {
+  e.preventDefault();
+  let _id = e.target.parentNode.parentNode.parentNode.id;
+  $.post({
+    url: `/defacture/task/${_id}`,
+    dataType: "json",
+  })
+    .done((res) => {
+      let block = document.querySelector("div#sending");
+      if (block) {
+        document.body.querySelector(".container").removeChild(block);
+      }
+
+      let msg = document.createElement("div");
+      msg.id = "sending";
+      msg.classList.add("alert");
+
+      document.body.querySelector(".container").appendChild(msg);
+      if (res.success) {
+        msg.classList.remove("alert-danger");
+        msg.classList.add("alert-success");
+        msg.textContent = `Tâche ${res.data.name} défacturée`;
+      } else {
+        msg.classList.remove("alert-success");
+        msg.classList.add("alert-danger");
+        msg.textContent = `${res.message}`;
+      }
+    })
+    .fail((err) => {
+      console.log(err);
+    });
+});
