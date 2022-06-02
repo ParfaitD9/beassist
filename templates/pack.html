@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facturation</title>
+  </head>
+  <body>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #ffffff;
+        font-family: sans-serif;
+      }
+      .main {
+        width: 90%;
+        margin: 2em auto;
+      }
+
+      .elastic {
+        display: flex;
+      }
+
+      .spc-between {
+        justify-content: space-between;
+      }
+      .end {
+        align-items: flex-end;
+      }
+      .column {
+        flex-direction: column;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      td {
+        padding: 0.7em;
+      }
+
+      .border {
+        border: 2px solid black;
+      }
+      .border-left {
+        border-left: 2px solid black;
+      }
+    </style>
+    <div class="main">
+      <div class="elastic spc-between">
+        <div>
+          <p style="font-weight: bold">Entretien Excellence & Cie</p>
+          <p>Lavage de vitres - Solutions durables et R&D</p>
+          <p>Mirabel, Québec</p>
+          <br />
+          <p>{{admin.name}}</p>
+          <p>Directeur des opérations commerciales</p>
+          <p>{{admin.phone}}</p>
+          <p>entretienexcellence@gmail.com</p>
+        </div>
+        <div class="elastic column end">
+          <h2 style="font-weight: lighter">Facture : {{facture}}</h2>
+          <p>{{date}}</p>
+          <p>Object : {{obj}}</p>
+        </div>
+      </div>
+      <div style="margin-top: 2.5em">
+        <p>{{client.name}}</p>
+        <p>{{client.addresse()}}</p>
+        <p>{{client.postal}} {{client.phone}}</p>
+        <p>{{client.email}}</p>
+      </div>
+
+      <div class="elastic" style="align-items: center; justify-content: center">
+        <table class="border" style="margin-top: 2.5em">
+          <tr class="border">
+            <th>Désignation</th>
+            <th class="border-left">Montant</th>
+          </tr>
+          <tr>
+            <td>-{{admin.name}}-</td>
+            <td class="border-left"></td>
+          </tr>
+          {% for task in tasks %}
+          <tr>
+            <td>{{task.subtask}}</td>
+            <td class="border-left">{{task.value}}$</td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td></td>
+            <td class="border-left">Sous-total : {{ht}} $</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td class="border-left">Taxes : {{taxes}} $</td>
+          </tr>
+          <tr>
+            <td>Numero de TPS / TVQ : {{tvs}}</td>
+            <td class="border-left">Total : {{ht+taxes}} $</td>
+          </tr>
+        </table>
+      </div>
+      <p style="margin-top: 2.5em">
+        -Merci pour votre confiance et à bientot !
+      </p>
+    </div>
+  </body>
+</html>

@@ -83,6 +83,16 @@ function showAlert(res) {
   msg.textContent = `${res.message}`;
 }
 
+function showModalAlert(res) {
+  if (res.success) {
+    document.querySelector(".alert").classList.remove("alert-danger");
+    document.querySelector(".alert").classList.add("alert-success");
+  } else {
+    document.querySelector(".alert").classList.remove("alert-success");
+    document.querySelector(".alert").classList.add("alert-danger");
+  }
+  $(".alert").text(`${res.message}`);
+}
 function getElementByName(name, block) {
   return block.getElementsByName(name)[0];
 }

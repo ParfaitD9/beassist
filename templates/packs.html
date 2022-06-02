@@ -21,20 +21,14 @@
     <div class="table-title">
       <div class="row">
         <div class="col-sm-6">
-          <h2>Manage <b>Customers</b></h2>
+          <h2>Manage <b>Packs</b></h2>
         </div>
         <div class="col-sm-6">
-          <a
-            href="#addEmployeeModal"
-            class="btn btn-success"
-            data-toggle="modal"
-            ><i class="bi bi-person-plus"></i> <span>Add New Customer</span></a
+          <a href="#addPackModal" class="btn btn-success" data-toggle="modal"
+            ><i class="bi bi-journal-plus"></i> <span>Add New Pack</span></a
           >
-          <a
-            href="#deleteEmployeeModal"
-            class="btn btn-danger"
-            data-toggle="modal"
-            ><i class="bi bi-person-dash"></i> <span>Delete</span></a
+          <a href="#deletePackModal" class="btn btn-danger" data-toggle="modal"
+            ><i class="bi bi-journal-minus"></i> <span>Delete</span></a
           >
         </div>
       </div>
@@ -48,16 +42,15 @@
               <label for="selectAll"></label>
             </span>
           </th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Address</th>
-          <th>Phone</th>
+          <th>Pack</th>
+          <th>Client</th>
+          <th>Coût</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        {% for client in customers %}
-        <tr id="{{client.pk}}">
+        {% for pack in packs %}
+        <tr id="{{pack.pk}}">
           <td>
             <span class="custom-checkbox">
               <input
@@ -69,16 +62,18 @@
               <label for="checkbox1"></label>
             </span>
           </td>
-          <td>{{client.name}}</td>
+          <td>{{pack.name}}</td>
+          <td>{{pack.customer}}</td>
+          <td>{{pack.price()}}</td>
           <td>
-            <a target="_blank" href="mailto:{{client.email}}"
-              >{{client.email}}</a
-            >
-          </td>
-          <td>{{client.postal}}</td>
-          <td>{{client.phone}}</td>
-          <td>
-            <a href="#" class="delete" data-toggle="modal"
+            <a href="#facturePackModal" class="edit" data-toggle="modal"
+              ><i
+                class="bi bi-file-plus"
+                title="Facturer"
+                data-toggle="tooltip"
+              ></i
+            ></a>
+            <a href="#deletePackModal" class="delete"
               ><i class="bi bi-trash3" title="Delete"></i
             ></a>
           </td>
@@ -101,12 +96,12 @@
   </div>
 </div>
 <!-- Add Modal HTML -->
-<div id="addEmployeeModal" class="modal fade">
+<div id="addPackModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="POST" action="/create/customer" id="addEmployeeModalForm">
+      <form id="addPackModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Add Employee</h4>
+          <h4 class="modal-title">Add Pack</h4>
           <button
             type="button"
             class="close"
@@ -116,59 +111,47 @@
             &times;
           </button>
         </div>
-        <div class="alert" role="alert">
-          <p></p>
-        </div>
+        <div class="alert" role="alert"></div>
         <div class="modal-body">
+          <div>
+            <p>Sous-tâches associées</p>
+            <ul id="associes"></ul>
+          </div>
+
           <div class="form-group">
-            <label>Nom</label>
-            <input type="text" name="name" class="form-control" required />
+            <label for="customer-name">Nom du client</label>
+            <select
+              class="form-control"
+              name="customer"
+              id="customers"
+            ></select>
           </div>
           <div class="form-group">
-            <label>Porte</label>
-            <input type="number" name="porte" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Rue</label>
-            <input type="text" name="street" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Ville</label>
-            <input type="text" name="city" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Appartement</label>
-            <input type="number" name="appart" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label>Postal</label>
-            <input type="text" name="postal" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Province</label>
+            <label>Nom du Pack</label>
             <input
               type="text"
-              name="province"
-              value="Québec"
+              id="pack-name"
+              name="name"
               class="form-control"
+              autocomplete="off"
               required
             />
           </div>
+
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" class="form-control" required />
+            <label for="subtask">Sous tâche</label>
+            <input
+              type="text"
+              id="subtask"
+              name="subtask"
+              class="form-control"
+              list="subtasks"
+            />
+            <datalist id="subtasks"> </datalist>
           </div>
           <div class="form-group">
-            <label>Téléphone</label>
-            <input type="tel" name="phone" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Statut</label>
-            <select name="statut" class="form-control">
-              <option value="C">Commercial</option>
-              <option value="I">Instutionnel</option>
-              <option value="R">Résidentiel</option>
-            </select>
+            <label for="value">Coût</label>
+            <input class="form-control" type="number" name="value" id="value" />
           </div>
         </div>
         <div class="modal-footer">
@@ -178,19 +161,27 @@
             data-dismiss="modal"
             value="Cancel"
           />
-          <input type="submit" class="btn btn-success" value="Add" />
+          <input
+            type="button"
+            id="add-subtask"
+            value="Add Subtask"
+            class="btn btn-primary"
+          />
+          <input type="submit" class="btn btn-success" value="Save" />
         </div>
       </form>
     </div>
   </div>
 </div>
-<!-- Edit Modal HTML -->
-<div id="editEmployeeModal" class="modal fade">
+<!-- Facture Modal HTML -->
+<div id="facturePackModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form>
+      <form id="facturePackModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Edit Employee</h4>
+          <h4 class="modal-title">
+            Facture Pack#<span id="facture-pack"></span>
+          </h4>
           <button
             type="button"
             class="close"
@@ -202,20 +193,15 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Name</label>
-            <input type="text" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Address</label>
-            <textarea class="form-control" required></textarea>
-          </div>
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="text" class="form-control" required />
+            <label>Objet de la facture</label>
+            <input
+              id="obj"
+              type="text"
+              name="obj"
+              class="form-control"
+              placeholder="Ex : Facture du mois de Mars"
+              required
+            />
           </div>
         </div>
         <div class="modal-footer">
@@ -232,12 +218,12 @@
   </div>
 </div>
 <!-- Delete Modal HTML -->
-<div id="deleteEmployeeModal" class="modal fade">
+<div id="deletePackModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
       <form>
         <div class="modal-header">
-          <h4 class="modal-title">Delete Employee</h4>
+          <h4 class="modal-title">Delete Pack</h4>
           <button
             type="button"
             class="close"
@@ -266,5 +252,5 @@
     </div>
   </div>
 </div>
-<script src="/static/js/employees.js"></script>
+<script src="/static/js/packs.js"></script>
 {% endblock %}

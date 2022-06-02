@@ -8,7 +8,9 @@ import pdfkit
 import hashlib as hb
 from jinja2 import Template
 from tabulate import tabulate
+import time
 
+DOCS_PATH = os.getenv('DOCS_PATH')
 db = pw.SqliteDatabase('database.db3')
 
 
@@ -114,7 +116,7 @@ class Facture(BaseModel):
             return
         _hash = hb.blake2b(
             (f'{client.pk}#{tmp}:{fin}' if fin else f'{client.pk}#{tmp}').encode(),
-            digest_size=2,
+            digest_size=4,
             salt=b'#d$fe2ad'
         ).hexdigest()
         _hash = f'{_hash}-2022-C'
@@ -143,9 +145,11 @@ class Facture(BaseModel):
                 t = t.render(ctx)
                 cout = sum([task.price for task in tasks])
                 try:
-                    pdfkit.from_string(t, f'./docs/{_hash}.pdf')
+                    pdfkit.from_string(t, os.path.join(
+                        DOCS_PATH, f'{_hash}.pdf')
+                    )
                 except Exception as e:
-                    print(e.__class__)
+                    print(e.__class__, e.args[0])
                 else:
                     try:
                         print(_hash)
@@ -290,7 +294,6 @@ class Task(BaseModel):
 class SubTask(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
-    value = pw.DecimalField(default=10.0)
 
     def __str__(self):
         return self.name
@@ -301,10 +304,68 @@ class Pack(BaseModel):
     name = pw.CharField()
     customer = pw.ForeignKeyField(Customer, unique=True)
 
+    def generate_facture(self, obj):
+        _hash = hb.blake2b(
+            f'{self.name}:{obj}:{int(time.time())}'.encode(),
+            digest_size=4,
+            salt=os.getenv('HASH_SALT').encode()
+        ).hexdigest()
+        _hash = f'{_hash}-{dt.today().year}-{self.customer.statut}'
+        tasks = PackSubTask.select().join(Pack).where(Pack.customer == self.customer)
+        client = self.customer
+        today = dt.today().strftime('%Y-%m-%d')
+
+        with open('templates/pack.html') as f:
+            t: Template = Template(f.read())
+            ctx = {
+                'tasks': tasks,
+                'client': client,
+                'admin': Customer(
+                    name=os.environ.get('ADMIN_FULLNAME'),
+                    adress=os.environ.get('ADIMN_ADRESS'),
+                    phone=os.environ.get('ADMIN_PHONE'),
+                    city=os.environ.get('ADMIN_CITY'),
+                    email=os.environ.get('EMAIL_USER')
+                ),
+                'nas': os.environ.get('ADMIN_NAS'),
+                'tvs': os.environ.get('ADMIN_TVS'),
+                'date': today,
+                'facture': _hash,
+                'obj': obj,
+                'ht': self.price(),
+                'taxes': round(self.price()*0.14975, 2)
+            }
+            t = t.render(ctx)
+
+            try:
+                pdfkit.from_string(t, os.path.join(DOCS_PATH, f'{_hash}.pdf'))
+            except Exception as e:
+                print(e.__class__, e.args[0])
+            else:
+                try:
+                    f = Facture.create(
+                        hash=_hash,
+                        customer_id=client.pk,
+                        date=today,
+                        cout=self.price(),
+                        obj=obj
+                    )
+                except (pw.IntegrityError,) as e:
+                    print("Same facture seems already exists.")
+                else:
+                    print(f"Facture {_hash} generated")
+
+                    return f
+
+    def price(self):
+        return float(sum([psub.value for psub
+                          in PackSubTask.select().join(Pack).where(Pack.customer == self.customer)]))
+
     def __str__(self):
         return self.name
 
 
 class PackSubTask(BaseModel):
+    value = pw.DecimalField(default=0.00, null=True)
     subtask = pw.ForeignKeyField(SubTask)
-    pack = pw.ForeignKeyField(Pack)
+    pack = pw.ForeignKeyField(Pack, on_delete='CASCADE')

@@ -7,18 +7,7 @@ $("#addFactureModalForm").submit((e) => {
   hr.onreadystatechange = (r) => {
     if (hr.readyState === 4) {
       res = JSON.parse(hr.responseText);
-      if (res.success) {
-        document.querySelector(".alert").classList.remove("alert-danger");
-        document.querySelector(".alert").classList.add("alert-success");
-        $(".alert").text(`Facture ${res.data.hash} générée`);
-      } else {
-        document.querySelector(".alert").classList.remove("alert-success");
-        document.querySelector(".alert").classList.add("alert-danger");
-        $(".alert").text(
-          `Erreur ${res.message} lors de la génération de facture`
-        );
-      }
-
+      showModalAlert(res);
       e.target.reset();
     }
   };
@@ -45,6 +34,9 @@ $("a.delete").click((e) => {
   $.post(`/delete/facture/${hash}`)
     .done((res) => {
       showAlert(res);
+      if (res.success) {
+        $(`tr#${hash}`).remove();
+      }
     })
     .fail((err) => {
       console.log(err);
@@ -52,8 +44,8 @@ $("a.delete").click((e) => {
 });
 
 function getRowInfos(rowId) {
-  let row = document.querySelector(`tr#${rowId}`);
-  let fields = row.getElementsByTagName("td");
+  let row = $(`tr#${rowId}`);
+  fields = row.children();
   return {
     hash: fields[1].textContent,
     customer: fields[2].textContent,

@@ -1,7 +1,9 @@
+import json
+from operator import ge
 import peewee as pw
 from flask import Flask, redirect,\
     render_template, request, jsonify
-from orm import Customer, Facture, Task
+from orm import Customer, Facture, Pack, PackSubTask, SubTask, Task, db
 import os
 
 app = Flask(__name__)
@@ -32,10 +34,7 @@ def c_customer():
     else:
         return jsonify({
             'success': True,
-            'data': {
-                'name': c.name,
-                'pk': c.pk
-            }
+            'message': f'Utilisateur {c.name} créé avec succès'
         })
 
 
@@ -178,7 +177,7 @@ def c_facture():
 @app.route('/delete/facture/<hash>', methods=['POST'])
 def d_facture(hash: str):
     try:
-        f: Facture = Facture.get(hash=hash.split('-', maxsplit=1)[-1])
+        f: Facture = Facture.get(hash=hash)
     except (pw.DoesNotExist,) as e:
         return jsonify({
             'success': False,
@@ -230,8 +229,136 @@ def send_facture():
 
 
 @app.route('/subtasks')
-def subtask():
-    return render_template('subtasks.html')
+def subtasks():
+    return render_template('subtasks.html', subtasks=SubTask.select())
+
+
+@app.route('/create/subtask', methods=['POST'])
+def c_subtask():
+    try:
+        r = dict(request.form)
+        f: SubTask = SubTask.create(**r)
+    except (Exception, ) as e:
+        return jsonify({
+            'success': False,
+            'message': f'{e.__class__} : {e.args[0]}'
+        })
+    else:
+        return jsonify({
+            'success': True,
+            'message': 'Sous tâche créé avec succès'
+        })
+
+
+@app.route('/delete/subtask/<int:pk>', methods=['POST'])
+def d_subtask(pk):
+    try:
+        sb: SubTask = SubTask.get(pk=pk)
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Sous tâche inexistante'
+        })
+    else:
+        sb.delete_instance()
+        return jsonify({
+            'success': True,
+            'message': 'Sous tâche supprimée avec succès'
+        })
+
+
+@app.route('/api/subtasks')
+def get_subtasks():
+    return jsonify([{'pk': sub.pk, 'name': sub.name} for sub in SubTask.select()])
+
+
+@app.route('/packs')
+def packs():
+    return render_template('packs.html', packs=Pack.select())
+
+
+@app.route('/create/pack', methods=['POST'])
+def c_pack():
+    pack = json.loads(request.form.get('data'))
+    c: Customer = Customer.get(pk=int(pack.get('customer')))
+    print(pack)
+    with db.atomic():
+        try:
+            p = Pack.create(
+                name=pack.get('name'),
+                customer=c
+            )
+        except (pw.IntegrityError,) as e:
+            return jsonify({
+                'success': False,
+                'message': f'{e.__class__} : {e.args[0]}'
+            })
+        else:
+            for sub in pack.get('subtasks'):
+                s, _ = SubTask.get_or_create(
+                    name=sub.get('name')
+                )
+                ps = PackSubTask.create(
+                    subtask=s,
+                    pack=p,
+                    value=sub.get('value')
+                )
+
+            return jsonify({
+                'success': True,
+                'message': 'Pack créé avec succès'
+            })
+
+
+@app.route('/facture/pack/<int:pk>', methods=['POST'])
+def f_pack(pk):
+    try:
+        p: Pack = Pack.get(pk=pk)
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Pack inexistant'
+        })
+    else:
+        try:
+            obj = request.form.get('obj')
+            p.generate_facture(obj)
+        except (Exception,) as e:
+            return jsonify({
+                'success': False,
+                'message': f'{e.__class__} : {e.args[0]}'
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': f'Pack facturé avec objet : {obj}'
+            })
+
+
+@app.route('/delete/pack/<int:pk>', methods=['POST'])
+def d_pack(pk):
+    try:
+        p: Pack = Pack.get(pk=pk)
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Pack inexistant'
+        })
+    else:
+        try:
+            for psub in PackSubTask.select().where(PackSubTask.pack == p):
+                psub.delete_instance()
+            p.delete_instance()
+        except (Exception,) as e:
+            return jsonify({
+                'success': False,
+                'message': f'{e.__class__} : {e.args[0]}'
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': f'Pack supprimé'
+            })
 
 
 if __name__ == '__main__':

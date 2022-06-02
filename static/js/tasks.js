@@ -7,15 +7,7 @@ $("#addTaskModalForm").submit((e) => {
   hr.onreadystatechange = (r) => {
     if (hr.readyState === 4) {
       res = JSON.parse(hr.responseText);
-      if (res.success) {
-        document.querySelector(".alert").classList.remove("alert-danger");
-        document.querySelector(".alert").classList.add("alert-success");
-        $(".alert").text(`Tâche ${res.data.name} enrégistrée`);
-      } else {
-        document.querySelector(".alert").classList.remove("alert-success");
-        document.querySelector(".alert").classList.add("alert-danger");
-        $(".alert").text(`Erreur ${r.message} lors de la création de la tâche`);
-      }
+      showModalAlert(res);
 
       e.target.reset();
     }
@@ -29,6 +21,9 @@ $("a.delete").click((e) => {
     url: `/delete/task/${_id}`,
     dataType: "json",
   }).then((res) => {
+    if (res.success) {
+      $(`tr#${_id}`).remove();
+    }
     showAlert(res);
   });
 });
@@ -41,6 +36,7 @@ $("a.edit").click((e) => {
     dataType: "json",
   })
     .done((res) => {
+      $(`tr#${_id}`).children()[5].textContent = "";
       showAlert(res);
     })
     .fail((err) => {
