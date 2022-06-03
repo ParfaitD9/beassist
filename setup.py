@@ -17,6 +17,6 @@ if __name__ == '__main__':
         with open('.env') as f:
             pass
     except (FileNotFoundError,) as e:
-        print('Create .env file and configure it properly please.')
+        print('Create .env file and configure it by *mv .env.exemple .env*.')
     else:
         print('.env file found !')
