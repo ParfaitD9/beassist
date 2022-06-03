@@ -17,7 +17,8 @@ def home():
 @app.route('/customers')
 def customers():
     page = int(request.args.get('page', 1))
-    emps = Customer.select().paginate(page, 7).order_by(Customer.city.asc())
+    emps = Customer.select().where(Customer.regulier == True).paginate(
+        page, 7).order_by(Customer.city.asc())
     return render_template('employees.html', customers=emps)
 
 
@@ -31,12 +32,14 @@ def customers_():
 @app.route('/create/customer', methods=['POST'])
 def c_customer():
     r = dict(request.form)
+    print(r)
     try:
-        c = Customer.create(**r)
+        c = Customer.create(**r) if request.form.get('regulier')\
+            else Customer.create(**r, regulier=False)
     except (Exception,) as e:
         return jsonify({
             'success': False,
-            'message': e.args[0]
+            'message': f' {e.__class__} : {e.args[0]}'
         })
     else:
         return jsonify({

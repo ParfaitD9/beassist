@@ -19,7 +19,7 @@ $("a.delete").click((e) => {
   axios
     .post(`/delete/customer/${hash}`)
     .then((res) => {
-      showAlert(res);
+      showModalAlert("addEmployeeModal", res);
       if (res.data.success) {
         $(`tr#${hash}`).remove();
       }
