@@ -387,7 +387,7 @@ def send_tomass():
     try:
         for facture in _factures:
             f: Facture = Facture.get(hash=facture)
-            # f.send(msg)
+            f.send(msg)
             f.regenerate()
     except (Exception, ) as e:
         return jsonify({
