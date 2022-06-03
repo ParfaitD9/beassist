@@ -11,6 +11,7 @@ from tabulate import tabulate
 import time
 
 DOCS_PATH = os.getenv('DOCS_PATH')
+COMPTA_PATH = os.getenv('COMPTA_PATH')
 db = pw.SqliteDatabase('database.db3')
 
 
@@ -35,6 +36,7 @@ class Customer(BaseModel):
         choices=('I', 'C', 'R'),
         default='C'
     )
+    regulier = pw.BooleanField(default=True)
 
     @staticmethod
     def lister():
@@ -110,7 +112,7 @@ class Facture(BaseModel):
                        & (Task.customer == client)
                        & (Task.facture == None))
 
-            tasks = Task.select().where(exp)
+            tasks = Task.select().where(exp).order_by(Task.executed_at.asc())
         except Exception as e:
             print("One or multiple args seems invalid")
             return
@@ -209,9 +211,10 @@ class Facture(BaseModel):
             facture.send()
 
     def regenerate(self):
-        _hash = self.hash.split('-')[0]
-        shutil.copyfile(f'./docs/{self.hash}.pdf',
-                        f'./compta/{self.customer.name}-{_hash}.pdf')
+        src = os.path.join(DOCS_PATH, f'{self.hash}.pdf')
+        dest = os.path.join(COMPTA_PATH, self.customer.name)
+        os.makedirs(dest, exist_ok=True)
+        shutil.copy(src, dest)
 
     def send(self, corps):
         if not self.sent:

@@ -1,15 +1,16 @@
 $(document).ready((e) => {
-  $.get({
-    url: "/api/subtasks",
-  })
-    .done((res) => {
-      res.forEach((el) => {
+  axios
+    .get("/api/subtasks")
+    .then((res) => {
+      res.data.forEach((el) => {
         let opt = document.createElement("option");
         opt.text = el.name;
         document.querySelector("datalist#subtasks").appendChild(opt);
       });
     })
-    .fail((err) => {});
+    .catch((err) => {
+      console.log(err);
+    });
 });
 var currentPack = {
   name: "",
@@ -33,23 +34,24 @@ $("#addPackModalForm").submit((e) => {
   currentPack.name = $("#pack-name").val();
   currentPack.customer = $("#customers").val();
 
-  $.post({
-    url: "/create/pack",
-    data: {
-      data: JSON.stringify(currentPack),
-    },
-  })
-    .done((res) => {
-      showModalAlert(res);
+  let datas = new FormData();
+  datas.append("data", JSON.stringify(currentPack));
+  axios
+    .post("/create/pack", datas)
+    .then((res) => {
+      showModalAlert("addPackModal", res);
+      $("ul#associes")
+        .children()
+        .each((i, obj) => {
+          obj.remove();
+        });
       currentPack = {
         name: "",
         subtasks: [],
         customer: "",
       };
     })
-    .fail((err) => {
-      console.log(err);
-    });
+    .catch((err) => console.log(JSON.stringify(currentPack)));
 });
 
 $("a.edit").click((e) => {
@@ -59,34 +61,27 @@ $("a.edit").click((e) => {
 $("a.delete").click((e) => {
   e.preventDefault();
   let _id = e.target.parentNode.parentNode.parentNode.id;
-  $.post({
-    url: `/delete/pack/${_id}`,
-  })
-    .done((res) => {
+  axios
+    .post(`/delete/pack/${_id}`)
+    .then((res) => {
       showAlert(res);
-      if (res.success) {
+      if (res.data.success) {
         $(`tr#${_id}`).remove();
       }
     })
-    .fail((err) => {
-      console.log(err);
-    });
+    .catch((err) => console.log(err));
 });
 
 $("#facturePackModalForm").submit((e) => {
   e.preventDefault();
   console.log(e.target.parentNode);
 
-  $.post({
-    url: `/facture/pack/${$("span#facture-pack").text()}`,
-    data: {
-      obj: $("#obj").val(),
-    },
-  })
-    .done((res) => {
+  let datas = new FormData();
+  datas.append("obj", $("#obj").val());
+  axios
+    .post(`/facture/pack/${$("span#facture-pack").text()}`, datas)
+    .then((res) => {
       showAlert(res);
     })
-    .fail((err) => {
-      console.log(err);
-    });
+    .catch((err) => console.log(res));
 });

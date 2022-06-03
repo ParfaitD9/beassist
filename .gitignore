@@ -2,6 +2,9 @@ venv
 *.pyc
 __pycache__
 docs/*
+compta/*
+!docs/.gitkeep
+!docs/.gitkeep
 *.pdf
 .env
 *.zip
@@ -17,4 +20,3 @@ credentials.json
 *.pickle
 *.log
 *.txt
-compta/*

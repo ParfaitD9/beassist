@@ -2,44 +2,37 @@ $("#addTaskModalForm").submit((e) => {
   let form = document.getElementById("addTaskModalForm");
   e.preventDefault();
   let datas = new FormData(form);
-  hr.open("POST", "/create/task");
-  hr.send(datas);
-  hr.onreadystatechange = (r) => {
-    if (hr.readyState === 4) {
-      res = JSON.parse(hr.responseText);
-      showModalAlert(res);
-
+  axios
+    .post("/create/task", datas)
+    .then((res) => {
+      showModalAlert("addTaskModal", res);
       e.target.reset();
-    }
-  };
+    })
+    .catch((err) => console.log(err));
 });
 
 $("a.delete").click((e) => {
   e.preventDefault();
   let _id = e.target.parentNode.parentNode.parentNode.id;
-  $.post({
-    url: `/delete/task/${_id}`,
-    dataType: "json",
-  }).then((res) => {
-    if (res.success) {
-      $(`tr#${_id}`).remove();
-    }
-    showAlert(res);
-  });
+  axios
+    .post(`/delete/task/${_id}`)
+    .then((res) => {
+      if (res.data.success) {
+        $(`tr#${_id}`).remove();
+      }
+      showAlert(res);
+    })
+    .catch((err) => console.log(err));
 });
 
 $("a.edit").click((e) => {
   e.preventDefault();
   let _id = e.target.parentNode.parentNode.parentNode.id;
-  $.post({
-    url: `/defacture/task/${_id}`,
-    dataType: "json",
-  })
-    .done((res) => {
+  axios
+    .post(`/defacture/task/${_id}`)
+    .then((res) => {
       $(`tr#${_id}`).children()[5].textContent = "";
       showAlert(res);
     })
-    .fail((err) => {
-      console.log(err);
-    });
+    .catch((err) => console.log(err));
 });

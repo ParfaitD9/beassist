@@ -2,43 +2,44 @@ $("#addFactureModalForm").submit((e) => {
   let form = document.getElementById("addFactureModalForm");
   e.preventDefault();
   let datas = new FormData(form);
-  hr.open("POST", "/create/facture");
-  hr.send(datas);
-  hr.onreadystatechange = (r) => {
-    if (hr.readyState === 4) {
-      res = JSON.parse(hr.responseText);
-      showModalAlert(res);
+  axios
+    .post("/create/facture", datas)
+    .then((res) => {
+      showModalAlert("addFactureModal", res);
       e.target.reset();
-    }
-  };
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 $("#editFactureModalForm").submit((e) => {
   e.preventDefault();
-  console.log("<Submited");
   let datas = new FormData(document.querySelector("form#editFactureModalForm"));
   datas.append("facture", document.querySelector("span#hash").textContent);
-  hr.open("POST", "/send");
-  hr.onreadystatechange = (e) => {
-    if (hr.readyState === 4) {
-      res = JSON.parse(hr.responseText);
+
+  axios
+    .post("/send", datas)
+    .then((res) => {
       showAlert(res);
-    }
-  };
-  hr.send(datas);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 $("a.delete").click((e) => {
   e.preventDefault();
   let hash = e.target.parentNode.parentNode.parentNode.id;
-  $.post(`/delete/facture/${hash}`)
-    .done((res) => {
+  axios
+    .post(`/delete/facture/${hash}`)
+    .then((res) => {
       showAlert(res);
-      if (res.success) {
+      if (res.data.success) {
         $(`tr#${hash}`).remove();
       }
     })
-    .fail((err) => {
+    .catch((err) => {
       console.log(err);
     });
 });
@@ -59,4 +60,14 @@ $("a.edit").click((e) => {
   document.querySelector("span#hash").textContent = infos.hash;
 });
 
-function sendMail(datas) {}
+$("#sendFacturesModalForm").submit((e) => {
+  e.preventDefault();
+  let datas = new FormData(document.querySelector("#sendFacturesModalForm"));
+  datas.append("factures", JSON.stringify(getCheckeds()));
+  axios
+    .post("/send/tomass", datas)
+    .then((res) => {
+      showModalAlert("sendFacturesModal", res);
+    })
+    .catch((err) => console.log(err));
+});

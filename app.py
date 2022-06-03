@@ -17,8 +17,15 @@ def home():
 @app.route('/customers')
 def customers():
     page = int(request.args.get('page', 1))
-    emps = Customer.select()
+    emps = Customer.select().paginate(page, 7).order_by(Customer.city.asc())
     return render_template('employees.html', customers=emps)
+
+
+@app.route('/customers_')
+def customers_():
+    emps = Customer.select().where(Customer.regulier ==
+                                   False).order_by(Customer.city.asc())
+    return render_template('employees.html', customers=emps, irr=True)
 
 
 @app.route('/create/customer', methods=['POST'])
@@ -48,7 +55,7 @@ def d_customer(pk):
             'message': f'Utilisateur non existant'
         })
     else:
-        c.delete_instance()
+        c.delete_instance(recursive=True)
         return jsonify({
             'success': True,
             'message': f'Utilisateur {c.name} bien supprimé'
@@ -85,12 +92,7 @@ def c_task():
     else:
         return jsonify({
             'success': True,
-            'data': {
-                'name': t.name,
-                'price': t.price,
-                'executed_at': t.executed_at,
-                'customer_id': t.customer.pk,
-            }
+            'message': f'Tâche {t.name} bien créée pour {t.customer}'
         })
 
 
@@ -163,14 +165,12 @@ def c_facture():
         print(f'{e} : {e.args[0]}')
         return {
             'success': False,
+            'message': f'{e.__class__} : {e.args[0]}'
         }
     else:
         return jsonify({
             'success': True,
-            'data': {
-                'hash': f.hash,
-                'customer': f.customer.pk
-            }
+            'message': f'Facture {f.hash} générée pour {f.customer}'
         })
 
 
@@ -279,6 +279,7 @@ def packs():
 
 @app.route('/create/pack', methods=['POST'])
 def c_pack():
+    print(request.form)
     pack = json.loads(request.form.get('data'))
     c: Customer = Customer.get(pk=int(pack.get('customer')))
     print(pack)
@@ -346,9 +347,7 @@ def d_pack(pk):
         })
     else:
         try:
-            for psub in PackSubTask.select().where(PackSubTask.pack == p):
-                psub.delete_instance()
-            p.delete_instance()
+            p.delete_instance(recursive=True)
         except (Exception,) as e:
             return jsonify({
                 'success': False,
@@ -359,6 +358,47 @@ def d_pack(pk):
                 'success': True,
                 'message': f'Pack supprimé'
             })
+
+
+@app.route('/facturer/default', methods=['POST'])
+def facture_default():
+    _cus = json.loads(request.form.get('customers'))
+    try:
+        for _cli in _cus:
+            pack: Pack = Pack.get(Pack.customer_id == _cli)
+            pack.generate_facture(request.form.get('obj'))
+    except (Exception, ) as e:
+        return jsonify({
+            'success': False,
+            'message': f'{e.__class__} : {e.args[0]}'
+        })
+    else:
+        return jsonify({
+            'success': True,
+            'message': 'Clients facturés'
+        })
+
+
+@app.route('/send/tomass', methods=['POST'])
+def send_tomass():
+    msg = request.form.get('message').strip()
+    _factures = json.loads(request.form.get('factures'))
+
+    try:
+        for facture in _factures:
+            f: Facture = Facture.get(hash=facture)
+            # f.send(msg)
+            f.regenerate()
+    except (Exception, ) as e:
+        return jsonify({
+            'success': False,
+            'message': f'{e.__class__} : {e.args[0]}'
+        })
+    else:
+        return jsonify({
+            'success': True,
+            'message': 'Factures envoyé'
+        })
 
 
 if __name__ == '__main__':
