@@ -1,5 +1,8 @@
 from orm import db, Customer, Task, Facture,\
     Pack, PackSubTask, SubTask
+import os
+from orm import DOCS_PATH, COMPTA_PATH
+
 
 if __name__ == '__main__':
     try:
@@ -20,3 +23,7 @@ if __name__ == '__main__':
         print('Create .env file and configure it by *mv .env.exemple .env*.')
     else:
         print('.env file found !')
+
+    os.makedirs(DOCS_PATH, exist_ok=True)
+    os.makedirs(COMPTA_PATH, exist_ok=True)
+    print("Importants paths created")
