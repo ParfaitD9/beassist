@@ -72,7 +72,7 @@ def f_customer():
 
 @app.route('/api/customers')
 def get_customers():
-    return jsonify([{'pk': c.pk, 'name': c.name} for c in Customer.select()])
+    return jsonify([{'pk': c.pk, 'name': c.name} for c in Customer.select().order_by(Customer.name.asc())])
 
 
 @app.route('/tasks')
@@ -214,6 +214,7 @@ def send_facture():
     try:
         if not facture.sent:
             facture.send(request.form.get('message').strip())
+            facture.regenerate()
         else:
             return jsonify({
                 'success': False,
@@ -222,7 +223,7 @@ def send_facture():
     except (Exception, ) as e:
         return jsonify({
             'success': False,
-            'message': e.args[0]
+            'message': f'{e.__class__} : {e.args[0]}'
         })
     else:
         return jsonify({
@@ -390,8 +391,9 @@ def send_tomass():
     try:
         for facture in _factures:
             f: Facture = Facture.get(hash=facture)
-            f.send(msg)
-            f.regenerate()
+            if not f.sent:
+                f.send(msg)
+                f.regenerate()
     except (Exception, ) as e:
         return jsonify({
             'success': False,
