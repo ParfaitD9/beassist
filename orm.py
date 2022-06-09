@@ -1,3 +1,4 @@
+from email.policy import default
 import shutil
 import peewee as pw
 from mailer import gmail_authenticate, send_message
@@ -9,6 +10,9 @@ import hashlib as hb
 from jinja2 import Template
 from tabulate import tabulate
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DOCS_PATH = os.getenv('DOCS_PATH')
 COMPTA_PATH = os.getenv('COMPTA_PATH')
@@ -27,6 +31,7 @@ class Customer(BaseModel):
     street = pw.CharField()
     city = pw.CharField()
     appart = pw.IntegerField(null=True)
+    joined = pw.DateField(default=dt.today)
     postal = pw.CharField(max_length=12)
     province = pw.CharField(default='Québec')
     email = pw.CharField(null=True)
@@ -37,6 +42,7 @@ class Customer(BaseModel):
         default='C'
     )
     regulier = pw.BooleanField(default=True)
+    prospect = pw.BooleanField(default=False)
 
     @staticmethod
     def lister():
@@ -66,6 +72,10 @@ class Customer(BaseModel):
             dt.today().strftime('%Y-%m-%d')
         )
 
+    def claim(self):
+        self.prospect = False
+        self.save()
+
     def __str__(self):
         return self.name
 
@@ -79,7 +89,8 @@ class Facture(BaseModel):
     sent = pw.BooleanField(default=False)
     cout = pw.DecimalField()
     obj = pw.CharField()
-    customer = pw.ForeignKeyField(Customer, backref='factures')
+    soumission = pw.BooleanField(default=False)
+    customer: Customer = pw.ForeignKeyField(Customer, backref='factures')
 
     @staticmethod
     def generate(client: int, obj: str, tmp: str, fin=None):
@@ -212,7 +223,8 @@ class Facture(BaseModel):
 
     def regenerate(self):
         src = os.path.join(DOCS_PATH, f'{self.hash}.pdf')
-        dest = os.path.join(COMPTA_PATH, self.customer.name)
+        dest = os.path.join(
+            COMPTA_PATH, f'{self.customer.statut}/{self.customer.name}')
         os.makedirs(dest, exist_ok=True)
         shutil.copy(src, dest)
 
@@ -235,6 +247,8 @@ class Facture(BaseModel):
             else:
                 self.sent = True
                 self.save()
+                if not self.soumission:
+                    self.regenerate()
                 print(
                     f'Facture {self.hash} send to {receiver}. \n Code: \n {r}')
 
@@ -244,9 +258,16 @@ class Facture(BaseModel):
             return False
 
     def delete_(self):
-        self.delete_instance()
-        os.remove(f'./docs/{self.hash}.pdf')
-        print('Facture successfully deleted')
+        try:
+            os.remove(
+                os.path.join(DOCS_PATH, f'{self.hash}.pdf')
+            )
+        except (FileNotFoundError, ) as e:
+            pass
+        except (Exception,) as e:
+            print(f'{e.__class__} : {e.args[0]}')
+        finally:
+            print('Facture successfully deleted')
 
     def ht(self):
         return sum((task.price for task in self.tasks))
@@ -266,8 +287,8 @@ class Task(BaseModel):
     name = pw.CharField()
     price = pw.FloatField()
     executed_at = pw.DateField(default=dt.today)
-    customer = pw.ForeignKeyField(Customer, backref='tasks')
-    facture = pw.ForeignKeyField(
+    customer: Customer = pw.ForeignKeyField(Customer, backref='tasks')
+    facture: Facture = pw.ForeignKeyField(
         Facture, backref='tasks', null=True, default=None
     )
 
@@ -305,7 +326,7 @@ class SubTask(BaseModel):
 class Pack(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
-    customer = pw.ForeignKeyField(Customer, unique=True)
+    customer: Customer = pw.ForeignKeyField(Customer, unique=True)
 
     def generate_facture(self, obj):
         _hash = hb.blake2b(
@@ -315,23 +336,23 @@ class Pack(BaseModel):
         ).hexdigest()
         _hash = f'{_hash}-{dt.today().year}-{self.customer.statut}'
         tasks = PackSubTask.select().join(Pack).where(Pack.customer == self.customer)
-        client = self.customer
+        client: Customer = self.customer
         today = dt.today().strftime('%Y-%m-%d')
 
-        with open('templates/pack.html') as f:
+        with open('templates/pack.html' if not self.customer.prospect else 'templates/soumission.html') as f:
             t: Template = Template(f.read())
             ctx = {
                 'tasks': tasks,
                 'client': client,
                 'admin': Customer(
-                    name=os.environ.get('ADMIN_FULLNAME'),
-                    adress=os.environ.get('ADIMN_ADRESS'),
-                    phone=os.environ.get('ADMIN_PHONE'),
-                    city=os.environ.get('ADMIN_CITY'),
-                    email=os.environ.get('EMAIL_USER')
+                    name=os.getenv('ADMIN_FULLNAME'),
+                    adress=os.getenv('ADIMN_ADRESS'),
+                    phone=os.getenv('ADMIN_PHONE'),
+                    city=os.getenv('ADMIN_CITY'),
+                    email=os.getenv('EMAIL_USER')
                 ),
-                'nas': os.environ.get('ADMIN_NAS'),
-                'tvs': os.environ.get('ADMIN_TVS'),
+                'nas': os.getenv('ADMIN_NAS'),
+                'tvs': os.getenv('ADMIN_TVS'),
                 'date': today,
                 'facture': _hash,
                 'obj': obj,
@@ -351,13 +372,21 @@ class Pack(BaseModel):
                         customer_id=client.pk,
                         date=today,
                         cout=self.price(),
-                        obj=obj
+                        obj=obj,
+                        soumission=True if client.prospect else False
                     )
                 except (pw.IntegrityError,) as e:
                     print("Same facture seems already exists.")
                 else:
                     print(f"Facture {_hash} generated")
-
+                    if not f.soumission:
+                        t = Task.create(
+                            name=f.obj,
+                            price=f.cout,
+                            executed_at=f.date,
+                            customer=f.customer,
+                            facture=f
+                        )
                     return f
 
     def price(self):
@@ -370,5 +399,5 @@ class Pack(BaseModel):
 
 class PackSubTask(BaseModel):
     value = pw.DecimalField(default=0.00, null=True)
-    subtask = pw.ForeignKeyField(SubTask)
-    pack = pw.ForeignKeyField(Pack, on_delete='CASCADE')
+    subtask: SubTask = pw.ForeignKeyField(SubTask)
+    pack: Pack = pw.ForeignKeyField(Pack, on_delete='CASCADE')

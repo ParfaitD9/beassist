@@ -1,10 +1,18 @@
 import json
-from operator import ge
 import peewee as pw
 from flask import Flask, redirect,\
     render_template, request, jsonify
 from orm import Customer, Facture, Pack, PackSubTask, SubTask, Task, db
-import os
+import dateparser as dp
+import datetime
+from datetimerange import DateTimeRange
+import warnings
+
+
+warnings.filterwarnings(
+    "ignore",
+    message="The localize method is no longer necessary, as this time zone supports the fold attribute",
+)
 
 app = Flask(__name__)
 
@@ -17,16 +25,71 @@ def home():
 @app.route('/customers')
 def customers():
     page = int(request.args.get('page', 1))
-    emps = Customer.select().where(Customer.regulier == True).paginate(
-        page, 7).order_by(Customer.city.asc())
+    emps = Customer.select().where(
+        (Customer.regulier == True) &
+        (Customer.prospect == False)
+    ).paginate(page, 7).order_by(Customer.name.asc())
     return render_template('employees.html', customers=emps)
 
 
 @app.route('/customers_')
 def customers_():
-    emps = Customer.select().where(Customer.regulier ==
-                                   False).order_by(Customer.city.asc())
+    page = int(request.args.get('page', 1))
+    emps = Customer.select().where(
+        (Customer.regulier == False) &
+        (Customer.prospect == False)
+    ).paginate(page, 7).order_by(Customer.city.asc())
     return render_template('employees.html', customers=emps, irr=True)
+
+
+@app.route('/regularise/customer/<int:pk>')
+def regulatise_cust(pk):
+    try:
+        c: Customer = Customer.get(pk=pk)
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Client non existant'
+        })
+    else:
+        c.regulier = True
+        c.save()
+        return jsonify({
+            'success': True,
+            'message': 'Client régularisé :)'
+        })
+
+
+@app.route('/prospects')
+def prospects():
+    page = int(request.args.get('page', 1))
+    pros = Customer.select().where(
+        Customer.prospect == True
+    ).paginate(page, 7).order_by(Customer.city.asc())
+    return render_template('employees.html', customers=pros, pro=True)
+
+
+@app.route('/claim/prospect/<int:pk>')
+def claim(pk):
+    try:
+        c: Customer = Customer.get(pk=pk)
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': 'Prospect non existant'
+        })
+    else:
+        c.claim()
+        return jsonify({
+            'success': True,
+            'message': 'Prospect convert :)'
+        })
+
+
+@app.route('/api/prospects')
+def get_prospects():
+    return jsonify([{'pk': c.pk, 'name': c.name} for c in
+                    Customer.select().where(Customer.prospect == True).order_by(Customer.name.asc())])
 
 
 @app.route('/create/customer', methods=['POST'])
@@ -65,11 +128,6 @@ def d_customer(pk):
         })
 
 
-@app.route('/facture/customer/<int:pk>')
-def f_customer():
-    pass
-
-
 @app.route('/api/customers')
 def get_customers():
     return jsonify([{'pk': c.pk, 'name': c.name} for c in Customer.select().order_by(Customer.name.asc())])
@@ -77,7 +135,8 @@ def get_customers():
 
 @app.route('/tasks')
 def tasks():
-    tasks = Task.select().order_by(Task.executed_at.desc())
+    page = int(request.args.get('page', 1))
+    tasks = Task.select().paginate(page, 7).order_by(Task.executed_at.desc())
     return render_template('tasks.html', tasks=tasks)
 
 
@@ -135,7 +194,7 @@ def defacture_task(pk):
         f.defacturer()
         return jsonify({
             'success': True,
-            'message': "Tâche bien défacturée"
+            'message': "Opération effectuée avec succès"
         })
 
 
@@ -144,9 +203,42 @@ def get_tasks():
     return jsonify([{'pk': t.pk, 'name': t.name} for t in Task.select().order_by(Task.executed_at.desc())])
 
 
+@app.route('/api/tasks/<debut>/<fin>')
+def range_tasks(debut, fin):
+    return jsonify([
+        {
+            'date': date.strftime('%Y-%m-%d'),
+            'point': Task.select(
+                pw.fn.SUM(Task.price)
+            ).where(
+                Task.executed_at == date
+            ).scalar(),
+            'count': Task.select().where(
+                Task.executed_at == date
+            ).count()
+        } for date in DateTimeRange(debut, fin).range(datetime.timedelta(days=1))
+    ])
+
+
 @app.route('/factures')
 def factures():
-    return render_template('factures.html', factures=Facture.select().order_by(Facture.date.desc()))
+    page = int(request.args.get('page', 1))
+    return render_template(
+        'factures.html',
+        factures=Facture.select().where(Facture.soumission ==
+                                        False).paginate(page, 7).order_by(Facture.date.desc())
+    )
+
+
+@app.route('/soumissions')
+def soumissions():
+    page = int(request.args.get('page', 1))
+    return render_template(
+        'factures.html',
+        factures=Facture.select().where(Facture.soumission ==
+                                        True).paginate(page, 7).order_by(Facture.date.desc()),
+        soum=True
+    )
 
 
 @app.route('/create/facture', methods=['POST'])
@@ -189,6 +281,7 @@ def d_facture(hash: str):
     else:
         if not f.sent and not f.tasks:
             f.delete_instance()
+            f.delete_()
             return jsonify({
                 'success': True,
                 'message': 'Facture bien supprimée'
@@ -200,10 +293,42 @@ def d_facture(hash: str):
             })
 
 
-@app.route('/view/<hash>')
-def view(hash):
-    p = os.path.abspath(f'./docs/{hash}.pdf')
-    return redirect(f'file://{p}')  # render_template('view.html', hash=hash)
+@app.route('/api/factures/<date>')
+def day_factures(date):
+
+    facs: list[Facture] = Facture.select().where(
+        (Facture.date == dp.parse(date).date()) &
+        (Facture.soumission == False)
+    )
+    return jsonify({
+        'date': date,
+        'data': [{
+            'hash': fac.hash,
+            'sent': fac.sent,
+            'cout': float(fac.cout),
+            'obj': fac.obj,
+            'soumission': fac.soumission,
+            'customer': fac.customer.pk
+        } for fac in facs]})
+
+
+@app.route('/api/factures/<debut>/<fin>')
+def range_factures(debut, fin):
+    return jsonify([
+        {
+            'date': date.strftime('%Y-%m-%d'),
+            'point': Facture.select(
+                pw.fn.SUM(Facture.cout)
+            ).where(
+                (Facture.date == date) &
+                (Facture.soumission == False)
+            ).scalar(),
+            'count': Facture.select().where(
+                (Facture.date == date) &
+                (Facture.soumission == False)
+            ).count()
+        } for date in DateTimeRange(debut, fin).range(datetime.timedelta(days=1))
+    ])
 
 
 @app.route('/send', methods=['POST'])
@@ -214,7 +339,6 @@ def send_facture():
     try:
         if not facture.sent:
             facture.send(request.form.get('message').strip())
-            facture.regenerate()
         else:
             return jsonify({
                 'success': False,
@@ -234,7 +358,8 @@ def send_facture():
 
 @app.route('/subtasks')
 def subtasks():
-    return render_template('subtasks.html', subtasks=SubTask.select())
+    page = int(request.args.get('page', 1))
+    return render_template('subtasks.html', subtasks=SubTask.select().paginate(page, 7))
 
 
 @app.route('/create/subtask', methods=['POST'])
@@ -278,7 +403,8 @@ def get_subtasks():
 
 @app.route('/packs')
 def packs():
-    return render_template('packs.html', packs=Pack.select())
+    page = int(request.args.get('page', 1))
+    return render_template('packs.html', packs=Pack.select().paginate(page, 7))
 
 
 @app.route('/create/pack', methods=['POST'])
@@ -364,6 +490,14 @@ def d_pack(pk):
             })
 
 
+@app.route('/view/pack/<int:pk>')
+def view_pack(pk):
+    pack = Pack.get(pk=pk)
+    subs = PackSubTask.select().join(Pack).where(Pack.pk == pk)
+
+    return render_template('view-pack.html', pack=pack, subtasks=subs)
+
+
 @app.route('/facturer/default', methods=['POST'])
 def facture_default():
     _cus = json.loads(request.form.get('customers'))
@@ -371,6 +505,11 @@ def facture_default():
         for _cli in _cus:
             pack: Pack = Pack.get(Pack.customer_id == _cli)
             pack.generate_facture(request.form.get('obj'))
+    except (pw.DoesNotExist, ) as e:
+        return jsonify({
+            'success': False,
+            'message': f'Pack non trouvé pour {Customer.get(pk=_cli)}. La facturation s\'est arrêté à ce niveau.'
+        })
     except (Exception, ) as e:
         return jsonify({
             'success': False,
@@ -406,5 +545,16 @@ def send_tomass():
         })
 
 
+@app.route('/make/point')
+def make_point():
+    today = datetime.datetime.now().date()
+    month = datetime.datetime(today.year, today.month, 1)
+    cash = Facture.select(pw.fn.SUM(Facture.cout)).where(
+        month <= Facture.date <= today).scalar() or 0
+    casks = Task.select().where(month <= Task.executed_at <= today).count()
+    cust = Customer.select().where(month <= Customer.joined <= today).count()
+    return render_template('point.html', cash=cash, casks=casks, custs=cust)
+
+
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

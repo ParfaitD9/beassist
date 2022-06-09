@@ -19,8 +19,8 @@ $("a.delete").click((e) => {
   axios
     .post(`/delete/customer/${hash}`)
     .then((res) => {
-      showModalAlert("addEmployeeModal", res);
       if (res.data.success) {
+        showAlert(res);
         $(`tr#${hash}`).remove();
       }
     })
@@ -33,11 +33,6 @@ $('a[href="#facturerEmployeeModal"]').click(() => {
   $("ul#toFacture li").each((i, obj) => {
     obj.remove();
   });
-  $('table tbody input[type="checkbox"]').each((i, obj) => {
-    if (obj.checked) {
-      toFacture.push(obj.value);
-    }
-  });
   let chkds = getCheckeds();
   chkds.forEach((obj, i) => {
     let li = document.createElement("li");
@@ -48,10 +43,11 @@ $('a[href="#facturerEmployeeModal"]').click(() => {
 
 $("#facturerEmployeeModalForm").submit((e) => {
   e.preventDefault();
+  console.log("Demande de facture");
   let datas = new FormData();
   datas.append(
     "customers",
-    JSON.stringify(toFacture.map((e) => Number.parseInt(e)))
+    JSON.stringify(getCheckeds().map((e) => Number.parseInt(e)))
   );
   datas.append("obj", $("#facturation-obj").val());
   axios
@@ -59,9 +55,37 @@ $("#facturerEmployeeModalForm").submit((e) => {
     .then((res) => {
       console.log(res);
       showModalAlert("facturerEmployeeModal", res);
-      $("#facturation-obj").text();
+      $("#facturation-obj").val("");
     })
     .catch((err) => {
       console.log(err);
     });
+});
+
+$("input#pro").click((e) => {
+  if (e.target.checked) {
+    $("input#reg").prop("checked", false);
+  }
+});
+
+$('i[title="Convertir"]').click((e) => {
+  let hash = e.currentTarget.parentNode.parentNode.parentNode.id;
+  axios
+    .get(`/claim/prospect/${hash}`)
+    .then((res) => {
+      showAlert(res);
+      $(`tr#${hash}`).remove();
+    })
+    .catch((err) => console.log(err));
+});
+
+$('i[title="Régulariser"]').click((e) => {
+  let hash = e.currentTarget.parentNode.parentNode.parentNode.id;
+  axios
+    .get(`/regularise/customer/${hash}`)
+    .then((res) => {
+      showAlert(res);
+      $(`tr#${hash}`).remove();
+    })
+    .catch((err) => console.log(err));
 });

@@ -1,3 +1,52 @@
+function paginate() {
+  if (document.querySelector("ul.pagination")) {
+    let pagination = document.querySelector("ul.pagination");
+    let path = window.location.pathname;
+    let uri = new window.URL(window.location.href);
+    let page = Number.parseInt(uri.searchParams.get("page")) || 1;
+
+    let previous = document.createElement("li");
+    previous.classList.add("page-item");
+    if (page <= 1) {
+      previous.classList.add("disabled");
+    }
+
+    let previous_link = document.createElement("a");
+    previous_link.href = page <= 1 ? "#" : `${path}?page=${page - 1}`;
+    previous_link.innerText = "Précédent";
+    previous.appendChild(previous_link);
+    pagination.appendChild(previous);
+
+    for (let i = page - 2; i <= page + 2; i++) {
+      if (i >= 1) {
+        let li = document.createElement("li");
+        li.classList.add("page-item");
+        if (i == page) {
+          li.classList.add("active");
+        }
+        let a = document.createElement("a");
+        a.classList.add("page-link");
+        a.href = `${path}?page=${i}`;
+        a.textContent = i;
+        li.appendChild(a);
+        pagination.appendChild(li);
+      }
+    }
+
+    let next = document.createElement("li");
+    next.classList.add("page-item");
+
+    let next_link = document.createElement("a");
+    next_link.href = `${path}?page=${page + 1}`;
+    next_link.innerText = "Suivant";
+    next.appendChild(next_link);
+    pagination.appendChild(next);
+  }
+}
+
+$("li.disabled a").click((e) => {
+  e.preventDefault();
+});
 $(document).ready(function () {
   // Activate tooltip
   $('[data-toggle="tooltip"]').tooltip();
@@ -20,6 +69,8 @@ $(document).ready(function () {
       $("#selectAll").prop("checked", false);
     }
   });
+
+  paginate();
 });
 
 const hr = new XMLHttpRequest();

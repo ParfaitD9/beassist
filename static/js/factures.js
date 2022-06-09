@@ -21,7 +21,8 @@ $("#editFactureModalForm").submit((e) => {
   axios
     .post("/send", datas)
     .then((res) => {
-      showAlert(res);
+      showModalAlert("editFactureModal", res);
+      $("#message").val("");
     })
     .catch((err) => {
       console.log(err);

@@ -81,7 +81,7 @@ $("#facturePackModalForm").submit((e) => {
   axios
     .post(`/facture/pack/${$("span#facture-pack").text()}`, datas)
     .then((res) => {
-      showAlert(res);
+      showModalAlert("facturePackModal", res);
     })
     .catch((err) => console.log(res));
 });

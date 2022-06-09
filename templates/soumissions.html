@@ -11,7 +11,6 @@
           <li><a href="/factures">Factures</a></li>
           <li><a href="/subtasks">Sous-tâches</a></li>
           <li><a href="/packs">Packs</a></li>
-          <li><a href="/make/point">Statistiques</a></li>
         </ul>
       </div>
       <!-- /.navbar-collapse -->
@@ -22,14 +21,17 @@
     <div class="table-title">
       <div class="row">
         <div class="col-sm-6">
-          <h2>Manage <b>Subtasks</b></h2>
+          <h2>Manage <b>Factures</b></h2>
         </div>
         <div class="col-sm-6">
-          <a href="#addSubtaskModal" class="btn btn-success" data-toggle="modal"
-            ><i class="bi bi-journal-plus"></i> <span>Add New Subtask</span></a
+          <a href="#addFactureModal" class="btn btn-success" data-toggle="modal"
+            ><i class="bi bi-file-earmark-plus"></i> <span>New Facture</span></a
           >
-          <a href="#deleteTaskModal" class="btn btn-danger" data-toggle="modal"
-            ><i class="bi bi-journal-minus"></i> <span>Delete</span></a
+          <a
+            href="#sendFacturesModal"
+            class="btn btn-warning"
+            data-toggle="modal"
+            ><i class="bi bi-send"></i> <span>Envoyer</span></a
           >
         </div>
       </div>
@@ -43,30 +45,38 @@
               <label for="selectAll"></label>
             </span>
           </th>
-          <th>Tâche</th>
-          <th>Coût</th>
+          <th>Hash</th>
+          <th>Client</th>
+          <th>Date</th>
+          <th>Envoyé?</th>
+          <th>Prix</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        {% for subtask in subtasks %}
-        <tr id="{{subtask.pk}}">
+        {% for facture in factures %}
+        <tr id="{{facture.hash}}">
           <td>
             <span class="custom-checkbox">
-              <input
-                type="checkbox"
-                id="checkbox1"
-                name="options[]"
-                value="1"
-              />
+              <input type="checkbox" value="{{facture.hash}}" />
               <label for="checkbox1"></label>
             </span>
           </td>
-          <td>{{subtask.name}}</td>
-          <td>{{subtask.value}}</td>
+          <td>{{facture.hash}}</td>
+          <td>{{facture.customer}}</td>
+          <td>{{facture.date}}</td>
+          <td>{{'Oui' if facture.sent else 'Non'}}</td>
+          <td>{{facture.cout}}</td>
           <td>
-            <a href="#" class="delete"
-              ><i class="bi bi-trash3" title="Delete"></i
+            <a href="#" class="delete" title="Supprimer"
+              ><i class="bi bi-trash3"></i
+            ></a>
+            <a
+              href="#editFactureModal"
+              class="edit"
+              data-toggle="modal"
+              title="Envoyer"
+              ><i class="bi bi-send"></i
             ></a>
           </td>
         </tr>
@@ -80,12 +90,12 @@
   </div>
 </div>
 <!-- Add Modal HTML -->
-<div id="addSubtaskModal" class="modal fade">
+<div id="addFactureModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="addSubtaskModalForm">
+      <form method="POST" action="/create/customer" id="addFactureModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Add Subtask</h4>
+          <h4 class="modal-title">Add Facture</h4>
           <button
             type="button"
             class="close"
@@ -98,14 +108,24 @@
         <div class="alert" role="alert"></div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Nom</label>
-            <input
-              type="text"
-              name="name"
+            <label>Client</label>
+            <select
+              name="customer"
+              id="customers"
               class="form-control"
-              autocomplete="off"
-              required
-            />
+            ></select>
+          </div>
+          <div class="form-group">
+            <label for="obj">Objet de la facture</label>
+            <input type="text" name="obj" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Début</label>
+            <input type="date" name="start_at" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Fin</label>
+            <input type="date" name="end_at" class="form-control" required />
           </div>
         </div>
         <div class="modal-footer">
@@ -122,12 +142,12 @@
   </div>
 </div>
 <!-- Edit Modal HTML -->
-<div id="editSubtaskModal" class="modal fade">
+<div id="editFactureModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form>
+      <form id="editFactureModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Edit Task</h4>
+          <h4 class="modal-title">Send <span id="hash"></span></h4>
           <button
             type="button"
             class="close"
@@ -139,20 +159,15 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Name</label>
-            <input type="text" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Address</label>
-            <textarea class="form-control" required></textarea>
-          </div>
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="text" class="form-control" required />
+            <label for="message">Message personnalisé</label>
+            <textarea
+              name="message"
+              id="message"
+              cols="30"
+              rows="5"
+              class="form-control"
+            >
+            </textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -162,19 +177,19 @@
             data-dismiss="modal"
             value="Cancel"
           />
-          <input type="submit" class="btn btn-info" value="Save" />
+          <input type="submit" class="btn btn-info" value="Send" />
         </div>
       </form>
     </div>
   </div>
 </div>
-<!-- Delete Modal HTML -->
-<div id="deleteTaskModal" class="modal fade">
+<!-- SendFacture Modal HTML -->
+<div id="sendFacturesModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form>
+      <form id="sendFacturesModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Delete task</h4>
+          <h4 class="modal-title">Envoi de masse</h4>
           <button
             type="button"
             class="close"
@@ -185,9 +200,22 @@
           </button>
         </div>
         <div class="modal-body">
-          <p>Are you sure you want to delete these Records?</p>
+          <div class="form-group">
+            <label for="message">Message personnalisé</label>
+            <textarea
+              name="message"
+              id="message"
+              cols="30"
+              rows="5"
+              class="form-control"
+            >
+            </textarea>
+          </div>
           <p class="text-warning">
-            <small>This action cannot be undone.</small>
+            <small
+              >Cette actiion peut prendre un certain temps en fonction du nombre
+              de factures</small
+            >
           </p>
         </div>
         <div class="modal-footer">
@@ -197,11 +225,11 @@
             data-dismiss="modal"
             value="Cancel"
           />
-          <input type="submit" class="btn btn-danger" value="Delete" />
+          <input type="submit" class="btn btn-info" value="Send" />
         </div>
       </form>
     </div>
   </div>
 </div>
-<script src="/static/js/subtasks.js"></script>
+<script src="/static/js/factures.js"></script>
 {% endblock %}

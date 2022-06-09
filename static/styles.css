@@ -1,6 +1,6 @@
 body {
     color: #566787;
-    background: #f5f5f5;
+    background: #ffffffc2;
     font-family: 'Varela Round', sans-serif;
     font-size: 13px;
 }
@@ -230,4 +230,28 @@ table.table .avatar {
 a.irr {
     color: #ffffff;
     text-decoration: underline;
+}
+
+canvas {
+    border:  1px solid #000;
+    background-color: rgb(255, 255, 255);
+    color: #ffddff;
+}
+
+.card {
+    height: 30%;
+    border: 1px solid #27272723;
+    background-color: #ffffff;
+    border-radius: 3px ;
+    box-shadow: 3px 5px 3px #7a7a7a9a;
+    padding: 2px;
+}
+
+div.caption h1 {
+    color: #0397d6;
+    font-family: 'Ubuntu'
+}
+
+div.caption span {
+    font-weight: bold;
 }

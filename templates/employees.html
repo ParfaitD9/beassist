@@ -8,10 +8,12 @@
         <ul class="nav navbar-nav">
           <li><a href="/customers">Clients</a></li>
           <li><a href="/customers_">Irreguliers</a></li>
+          <li><a href="/prospects">Prospects</a></li>
           <li><a href="/tasks">Tâches</a></li>
           <li><a href="/factures">Factures</a></li>
           <li><a href="/subtasks">Sous-tâches</a></li>
           <li><a href="/packs">Packs</a></li>
+          <li><a href="/make/point">Statistiques</a></li>
         </ul>
       </div>
       <!-- /.navbar-collapse -->
@@ -22,7 +24,11 @@
     <div class="table-title">
       <div class="row">
         <div class="col-sm-6">
+          {% if pro %}
+          <h2>Manage <b>Prospects</b></h2>
+          {% else %}
           <h2>Manage <b>{{'Irreguliers' if irr else 'Customers' }}</b></h2>
+          {% endif %}
         </div>
         <div class="col-sm-6">
           <a
@@ -77,22 +83,23 @@
             <a href="#" class="delete" data-toggle="modal"
               ><i class="bi bi-trash3" title="Delete"></i
             ></a>
+            {% if pro %}
+            <a href="#" class="edit"
+              ><i class="bi bi-emoji-wink" title="Convertir"></i
+            ></a>
+            {% elif irr %}
+            <a href="#" class="edit"
+              ><i class="bi bi-arrow-right-square" title="Régulariser"></i
+            ></a>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
     <div class="clearfix">
-      <div class="hint-text">Showing <b>5</b> out of <b>25</b> entries</div>
-      <ul class="pagination">
-        <li class="page-item disabled"><a href="#">Previous</a></li>
-        <li class="page-item"><a href="#" class="page-link">1</a></li>
-        <li class="page-item"><a href="#" class="page-link">2</a></li>
-        <li class="page-item active"><a href="#" class="page-link">3</a></li>
-        <li class="page-item"><a href="#" class="page-link">4</a></li>
-        <li class="page-item"><a href="#" class="page-link">5</a></li>
-        <li class="page-item"><a href="#" class="page-link">Next</a></li>
-      </ul>
+      <div class="hint-text">Affichage de <b>7</b> résultats</div>
+      <ul class="pagination"></ul>
     </div>
   </div>
 </div>
@@ -102,7 +109,7 @@
     <div class="modal-content">
       <form method="POST" action="/create/customer" id="addEmployeeModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Add Employee</h4>
+          <h4 class="modal-title">Add Customer</h4>
           <button
             type="button"
             class="close"
@@ -169,16 +176,16 @@
               </div>
             </div>
           </div>
-          <div class="form-inline">
-            <div class="form-group">
-              <label>Statut</label>
-              <select name="statut" class="form-control">
-                <option value="C">Commercial</option>
-                <option value="I">Instutionnel</option>
-                <option value="R">Résidentiel</option>
-              </select>
-            </div>
-            <div class="form-group">
+          <div class="form-group">
+            <label>Statut</label>
+            <select name="statut" class="form-control">
+              <option value="C">Commercial</option>
+              <option value="I">Instutionnel</option>
+              <option value="R">Résidentiel</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-group col-sm-6">
               <label for="reg">Regulier ?</label>
               <input
                 class="check"
@@ -187,6 +194,10 @@
                 id="reg"
                 checked
               />
+            </div>
+            <div class="form-group col-sm-6">
+              <label for="pro">Prospect ?</label>
+              <input type="checkbox" name="prospect" id="pro" />
             </div>
           </div>
         </div>

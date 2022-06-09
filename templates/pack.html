@@ -89,7 +89,7 @@
           </tr>
           {% for task in tasks %}
           <tr>
-            <td>{{task.subtask}}</td>
+            <td>{{task.subtask.name}}</td>
             <td class="border-left">{{task.value}}$</td>
           </tr>
           {% endfor %}
