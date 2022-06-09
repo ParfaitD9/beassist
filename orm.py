@@ -12,8 +12,8 @@ from tabulate import tabulate
 import time
 from dotenv import load_dotenv
 
-load_dotenv()
 
+load_dotenv()
 DOCS_PATH = os.getenv('DOCS_PATH')
 COMPTA_PATH = os.getenv('COMPTA_PATH')
 db = pw.SqliteDatabase('database.db3')
