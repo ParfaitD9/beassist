@@ -1,5 +1,5 @@
 from orm import db, Customer, Task, Facture,\
-    Pack, PackSubTask, SubTask
+    Pack, PackSubTask, SubTask, City
 import os
 from orm import DOCS_PATH, COMPTA_PATH
 
@@ -7,9 +7,10 @@ from orm import DOCS_PATH, COMPTA_PATH
 if __name__ == '__main__':
     try:
         db.connect()
-        db.drop_tables([Customer, Task, Facture, Pack, PackSubTask, SubTask])
+        db.drop_tables([Customer, Task, Facture, Pack,
+                       PackSubTask, SubTask, City])
         db.create_tables([Customer, Task, Facture, Pack,
-                         PackSubTask, SubTask])
+                         PackSubTask, SubTask, City])
         db.close()
     except Exception as e:
         print(e, 'during database creation')

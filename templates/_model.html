@@ -64,10 +64,25 @@
                   </li>
                 </ul>
               </li>
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/tasks"
-                  >Tâches</a
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  id="tasksDropdown"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
                 >
+                  Tâches
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="tasksDropdown">
+                  <li>
+                    <a class="dropdown-item" href="/tasks">Tâches</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="/subtasks">Sous-tâches</a>
+                  </li>
+                </ul>
               </li>
               <li class="nav-item dropdown">
                 <a
@@ -89,6 +104,14 @@
                   </li>
                 </ul>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="/packs">Packs</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="/make/point"
+                  >Stats</a
+                >
+              </li>
             </ul>
             <form class="d-flex">
               <input
@@ -108,7 +131,8 @@
     {% block content %} {% endblock %}
     <script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
     <script src="/static/vendor/js/jquery-3.6.0.min.js"></script>
-    <script src="/static/js/axios.min.js"></script>
+    <script src="/static/vendor/js/axios.min.js"></script>
+    <script src="/static/_js/_main.js"></script>
     {% block js %} {% endblock %}
   </body>
 </html>

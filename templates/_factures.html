@@ -1,24 +1,5 @@
-{% extends 'model.html' %} {% block content %}
-<div class="container">
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li><a href="/customers">Clients</a></li>
-          <li><a href="/tasks">Tâches</a></li>
-          <li><a href="/factures">Factures</a></li>
-          <li><a href="/soumissions">Soumissions</a></li>
-          <li><a href="/subtasks">Sous-tâches</a></li>
-          <li><a href="/packs">Packs</a></li>
-          <li><a href="/make/point">Statistiques</a></li>
-        </ul>
-      </div>
-      <!-- /.navbar-collapse -->
-    </div>
-    <!-- /.container-fluid -->
-  </nav>
+{% extends '_model.html' %} {% block content %}
+<main class="container">
   <div class="table-wrapper">
     <div class="table-title">
       <div class="row">
@@ -26,13 +7,16 @@
           <h2>Manage <b>{{'Soumissions' if soum else 'Factures'}}</b></h2>
         </div>
         <div class="col-sm-6">
-          <a href="#addFactureModal" class="btn btn-success" data-toggle="modal"
+          <a
+            href="#addFactureModal"
+            class="btn btn-success"
+            data-bs-toggle="modal"
             ><i class="bi bi-file-earmark-plus"></i> <span>New Facture</span></a
           >
           <a
             href="#sendFacturesModal"
             class="btn btn-warning"
-            data-toggle="modal"
+            data-bs-toggle="modal"
             ><i class="bi bi-send"></i> <span>Envoyer</span></a
           >
         </div>
@@ -64,7 +48,11 @@
               <label for="checkbox1"></label>
             </span>
           </td>
-          <td>{{facture.hash}}</td>
+          <td>
+            <a href="/view/{{facture.hash}}" target="_blank"
+              >{{facture.hash}}</a
+            >
+          </td>
           <td>{{facture.customer}}</td>
           <td>{{facture.date}}</td>
           <td>{{'Oui' if facture.sent else 'Non'}}</td>
@@ -73,13 +61,15 @@
             <a href="#" class="delete" title="Supprimer"
               ><i class="bi bi-trash3"></i
             ></a>
+            {% if not facture.sent %}
             <a
-              href="#editFactureModal"
+              href="#sendFactureModal"
               class="edit"
-              data-toggle="modal"
+              data-bs-toggle="modal"
               title="Envoyer"
               ><i class="bi bi-send"></i
             ></a>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -90,24 +80,28 @@
       <ul class="pagination"></ul>
     </div>
   </div>
-</div>
-<!-- Add Modal HTML -->
-<div id="addFactureModal" class="modal fade">
+</main>
+<!-- Add facture modal -->
+<div
+  id="addFactureModal"
+  class="modal fade"
+  aria-labelledby="addFactureModallabel"
+  tabindex="-1"
+  aria-hidden="true"
+>
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="POST" action="/create/customer" id="addFactureModalForm">
+      <form id="addFactureModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Add Facture</h4>
+          <h4 class="modal-title" id="addFactureModallabel">Add Facture</h4>
           <button
             type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-hidden="true"
-          >
-            &times;
-          </button>
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
-        <div class="alert" role="alert"></div>
+        <div class="alert" role="alert"><p></p></div>
         <div class="modal-body">
           <div class="form-group">
             <label>Client</label>
@@ -133,8 +127,8 @@
         <div class="modal-footer">
           <input
             type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
             value="Cancel"
           />
           <input type="submit" class="btn btn-success" value="Add" />
@@ -143,28 +137,35 @@
     </div>
   </div>
 </div>
-<!-- Edit Modal HTML -->
-<div id="editFactureModal" class="modal fade">
+<!--Send solo facture modal-->
+<div
+  id="sendFactureModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="sendFactureModallabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="editFactureModalForm">
+      <form id="sendFactureModalForm">
         <div class="modal-header">
           <h4 class="modal-title">Send <span id="hash"></span></h4>
           <button
             type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-hidden="true"
-          >
-            &times;
-          </button>
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="alert" role="alert">
+          <p></p>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="message">Message personnalisé</label>
+            <label for="inputMessage">Message personnalisé</label>
             <textarea
               name="message"
-              id="message"
+              id="inputMessage"
               cols="30"
               rows="5"
               class="form-control"
@@ -175,9 +176,9 @@
         <div class="modal-footer">
           <input
             type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
-            value="Cancel"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
           />
           <input type="submit" class="btn btn-info" value="Send" />
         </div>
@@ -185,28 +186,38 @@
     </div>
   </div>
 </div>
-<!-- SendFacture Modal HTML -->
-<div id="sendFacturesModal" class="modal fade">
+
+<!--Send mass factures modal-->
+<div
+  id="sendFacturesModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="sendFacturesModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog">
     <div class="modal-content">
       <form id="sendFacturesModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Envoi de masse</h4>
+          <h4 class="modal-title" id="sendFacturesModalLabel">
+            Envoi de masse
+          </h4>
           <button
             type="button"
-            class="close"
-            data-dismiss="modal"
+            class="btn-close"
+            data-bs-dismiss="modal"
             aria-hidden="true"
-          >
-            &times;
-          </button>
+          ></button>
+        </div>
+        <div class="alert" role="alert">
+          <p></p>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="message">Message personnalisé</label>
+            <label for="inputMMessage">Message personnalisé</label>
             <textarea
               name="message"
-              id="message"
+              id="inputMMessage"
               cols="30"
               rows="5"
               class="form-control"
@@ -223,9 +234,9 @@
         <div class="modal-footer">
           <input
             type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
-            value="Cancel"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
           />
           <input type="submit" class="btn btn-info" value="Send" />
         </div>
@@ -233,5 +244,6 @@
     </div>
   </div>
 </div>
-<script src="/static/js/factures.js"></script>
+{% endblock %} {% block js %}
+<script src="/static/_js/_factures.js"></script>
 {% endblock %}

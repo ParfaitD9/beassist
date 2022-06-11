@@ -1,36 +1,22 @@
-{% extends 'model.html' %} {% block content %}
-<div class="container">
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li>
-            <a href="/packs"><i class="bi bi-arrow-left">Retour</i></a>
-          </li>
-        </ul>
-      </div>
-      <!-- /.navbar-collapse -->
+{% extends '_model.html' %} {% block content %}
+<main class="container">
+  <div class="card">
+    <div class="card-header">
+      <a href="/packs"><i class="bi bi-arrow-left">Retour</i></a>
+      <b>{{pack.name}}</b>
     </div>
-    <!-- /.container-fluid -->
-  </nav>
-  <div class="panel panel-info">
-    <div class="panel-heading">
-      <h3 class="panel-title"><b>{{pack.name}}</b></h3>
-    </div>
-    <div class="panel-body">
+    <div class="card-body">
       <ul>
         {% for subtask in subtasks %}
         <li>{{subtask.subtask.name}} {{subtask.value}}</li>
         {% endfor %}
       </ul>
     </div>
-    <div class="panel-footer">
-      Total :
+    <div class="card-footer">
+      <b>Total</b> :
       <h3 style="display: inline">{{pack.price()}}</h3>
       CAD
     </div>
   </div>
-</div>
+</main>
 {% endblock %}

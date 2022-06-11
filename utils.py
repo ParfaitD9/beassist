@@ -1,5 +1,6 @@
 import re
-from orm import Facture, Task, db, Customer
+from orm import Facture, Task, db, Customer, City
+import peewee as pw
 from datetime import date as dte
 from tabulate import tabulate
 import dateparser as dp
@@ -12,7 +13,7 @@ def load_client_py(obj: list):
             porte, rue = bloc.split(maxsplit=1)
             porte = int(porte)
             province = region.split(', ')[-1]
-
+            city, _ = City.get_or_create(name=city)
             r = re.match(
                 '^(?P<a>\(\d{3}\)|\d{3})[- ]*(?P<b>\d{3})[- ]*(?P<c>\d{4})', phone
             )
@@ -32,7 +33,7 @@ def load_client_py(obj: list):
                 'name': nom,
                 'porte': porte,
                 'street': rue,
-                'city': city,
+                'city': city.pk,
                 'postal': postal,
                 'province': province,
                 'email': _mail,
@@ -47,15 +48,19 @@ def load_client_py(obj: list):
 def load_task_py(obj):
     with db.atomic():
         for nom, _, _, _, cout, travaux, _, _ in obj:
-            cus = Customer.get(name=nom)
-            t = Task.create(
-                name=travaux[:20],
-                price=float(cout),
-                executed_at=dte.today(),
-                customer=cus
-            )
+            try:
+                cus = Customer.get(name=nom)
+            except (pw.DoesNotExist, ) as e:
+                continue
+            else:
+                t = Task.create(
+                    name=travaux[:20],
+                    price=float(cout),
+                    executed_at=dte.today(),
+                    customer=cus
+                )
 
-            print(f'Task {nom} created')
+                print(f'Task {nom} created')
 
 
 def make_point(debut=None, fin=None):

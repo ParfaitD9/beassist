@@ -1,5 +1,4 @@
-{% extends '_model.html' %}
-{% block content %}
+{% extends '_model.html' %} {% block content %}
 <main class="container">
   <div class="table-wrapper">
     <div class="table-title">
@@ -19,7 +18,7 @@
             ><i class="bi bi-person-plus"></i> <span>Add New Customer</span></a
           >
           <a
-            href="#facturerCustomerModal"
+            href="#factureCustomerModal"
             class="btn btn-warning"
             data-bs-toggle="modal"
             ><i class="bi bi-file-earmark-plus"></i> <span>Facturer</span></a
@@ -36,9 +35,9 @@
               <label for="selectAll"></label>
             </span>
           </th>
-          <th scope="col">Name</th>
-          <th scope="col">Email</th>
-          <th scope="col">Address</th>
+          <th scope="col">Nom</th>
+          <th scope="col">Courriel</th>
+          <th scope="col">Postal</th>
           <th scope="col">Phone</th>
           <th scope="col">Actions</th>
         </tr>
@@ -95,154 +94,209 @@
 >
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="POST" id="addCustomerModalForm">
+      <form id="addCustomerModalForm" autocomplete="off">
         <div class="modal-header">
           <h4 class="modal-title" id="addCustomerModallablel">Add Customer</h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
         <div class="alert" role="alert">
           <p></p>
         </div>
         <div class="modal-body">
-            <div class="row g-3">
-                <div class="col-12">
-                    <label for="name" class="form-label">Nom</label>
-                    <input type="text" class="form-control" id="name" name="name">
-                  </div>
-                <div class="col-md-6">
-                  <label for="email" class="form-label">Courriel</label>
-                  <input type="email" class="form-control" id="email" name="email">
-                </div>
-                <div class="col-md-6">
-                  <label for="phone" class="form-label">Téléphone</label>
-                  <input type="tel" class="form-control" id="phone" name="phone">
-                </div>
-                <div class="col-md-3">
-                    <label for="porte">N° de porte</label>
-                    <input type="number" class="form-control" id="number">
-                </div>
-                <div class="col-md-6">
-                    <label for="inputStreet">Rue</label>
-                    <input type="text" class="form-control" id="inputStreet">
-                </div>
-                <div class="col-md-3">
-                    <label for="inputAppart">N° appart</label>
-                    <input type="number" class="form-control" id="appart">
-                </div>
-                <div class="col-md-5">
-                  <label for="city" class="form-label">Ville</label>
-                  <select name="city" id="city" class="form-control"></select>
-                </div>
-                <div class="col-md-4">
-                  <label for="province" class="form-label">Province</label>
-                  <input type="text" value="Québec" class="form-control" id="province">
-                </div>
-                <div class="col-md-3">
-                  <label for="inputPostal" class="form-label">Postal</label>
-                  <input type="text" class="form-control" id="inputPostal">
-                </div>
-                <div class="col-12">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck">
-                    <label class="form-check-label" for="gridCheck">
-                      Check me out
-                    </label>
-                  </div>
-                </div>
-                <div class="col-12">
-                  <button type="submit" class="btn btn-primary">Sign in</button>
-                </div>
-            </div>
-          <div class="form-group">
-            <label>Nom</label>
-            <input type="text" name="name" class="form-control" required />
-          </div>
-
-          <div class="form-inline">
-            <div class="form-group">
-              <label>Porte</label>
-              <input type="number" name="porte" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Rue</label>
-              <input type="text" name="street" class="form-control" required />
-            </div>
-          </div>
-          <div class="form-inline">
-            <div class="form-group">
-              <label>Ville</label>
-              <input type="text" name="city" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Province</label>
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="name" class="form-label">Nom</label>
               <input
                 type="text"
-                name="province"
-                value="Québec"
                 class="form-control"
+                id="name"
+                name="name"
                 required
               />
             </div>
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" name="email" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Téléphone</label>
-              <input type="tel" name="phone" class="form-control" required />
-            </div>
-
-            <div class="form-group">
-              <label>Appart.</label>
-              <input type="number" name="appart" class="form-control" />
-              <div class="form-group">
-                <label>Postal</label>
-                <input
-                  type="text"
-                  name="postal"
-                  class="form-control"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Statut</label>
-            <select name="statut" class="form-control">
-              <option value="C">Commercial</option>
-              <option value="I">Instutionnel</option>
-              <option value="R">Résidentiel</option>
-            </select>
-          </div>
-          <div>
-            <div class="form-group col-sm-6">
-              <label for="reg">Regulier ?</label>
+            <div class="col-md-6">
+              <label for="email" class="form-label">Courriel</label>
               <input
-                class="check"
-                type="checkbox"
-                name="regulier"
-                id="reg"
-                checked
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                required
               />
             </div>
-            <div class="form-group col-sm-6">
-              <label for="pro">Prospect ?</label>
-              <input type="checkbox" name="prospect" id="pro" />
+            <div class="col-md-6">
+              <label for="phone" class="form-label">Téléphone</label>
+              <input
+                type="tel"
+                class="form-control"
+                id="phone"
+                name="phone"
+                required
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="porte">N° de porte</label>
+              <input
+                type="number"
+                class="form-control"
+                id="inputPorte"
+                name="porte"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="inputStreet">Rue</label>
+              <input
+                type="text"
+                class="form-control"
+                id="inputStreet"
+                name="street"
+                required
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="inputAppart">N° appart</label>
+              <input
+                type="number"
+                class="form-control"
+                id="inputAppart"
+                name="appart"
+              />
+            </div>
+            <div class="col-md-5">
+              <label for="city" class="form-label">Ville</label>
+              <input
+                type="text"
+                name="city"
+                class="form-control"
+                list="cities"
+              />
+              <datalist id="cities"></datalist>
+            </div>
+            <div class="col-md-4">
+              <label for="inputProvince" class="form-label">Province</label>
+              <input
+                type="text"
+                value="Québec"
+                class="form-control"
+                id="inputProvince"
+                name="province"
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="inputPostal" class="form-label">Postal</label>
+              <input
+                type="text"
+                class="form-control"
+                id="inputPostal"
+                name="postal"
+              />
+            </div>
+            <div class="col-6">
+              <label for="inputStatut">Statut</label>
+              <select name="statut" id="inputStatut" class="form-control">
+                <option value="C">Commercial</option>
+                <option value="I">Instutionnel</option>
+                <option value="R">Résidentiel</option>
+              </select>
+            </div>
+            <div class="col-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="regulierBox"
+                  checked
+                  name="regulier"
+                />
+                <label class="form-check-label" for="regulierBox">
+                  Régulier ?
+                </label>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="prospectBox"
+                  name="prospect"
+                />
+                <label class="form-check-label" for="prospectBox">
+                  Prospect ?
+                </label>
+              </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <input
             type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
-            value="Cancel"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
           />
-          <input type="submit" class="btn btn-success" value="Add" />
+          <input type="submit" class="btn btn-primary" value="Add" />
         </div>
       </form>
     </div>
   </div>
 </div>
+
+<!--Facture Customer Modal-->
+<div
+  id="factureCustomerModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="factureCustomerModal"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="factureCustomerModalForm">
+        <div class="modal-header">
+          <h4 class="modal-title" id="addCustomerModallablel">
+            Facturer customers
+          </h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="alert" role="alert">
+          <p></p>
+        </div>
+        <div class="modal-body">
+          <p>Voulez-vous facturer ces clients avec leurs packs par défaut?</p>
+          <ul id="toFacture"></ul>
+          <div class="form-group">
+            <label for="facturation-obj">Objet de la facturation</label>
+            <input type="text" id="facturation-obj" class="form-control" />
+          </div>
+          <p class="text-warning">
+            <small>Cette action ne pourra pas être annulée</small>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <input
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
+          />
+          <input type="submit" class="btn btn-warning" value="Facturer" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block js %}
+<script src="/static/_js/_customers.js"></script>
 {% endblock %}

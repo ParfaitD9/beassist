@@ -1,11 +1,15 @@
-$("#addEmployeeModalForm").submit((e) => {
-  let form = document.getElementById("addEmployeeModalForm");
+$(document).ready((e) => {
+  load_citys();
+  paginate();
+});
+
+$("form#addCustomerModalForm").submit((e) => {
   e.preventDefault();
-  let datas = new FormData(form);
+  let datas = new FormData(e.target);
   axios
     .post("/create/customer", datas)
     .then((res) => {
-      showModalAlert("addEmployeeModal", res);
+      showModalAlert("addCustomerModal", res);
       e.target.reset();
     })
     .catch((err) => {
@@ -29,7 +33,39 @@ $("a.delete").click((e) => {
     });
 });
 
-$('a[href="#facturerEmployeeModal"]').click(() => {
+$('i[title="Régulariser"]').click((e) => {
+  e.preventDefault();
+  let hash = e.currentTarget.parentNode.parentNode.parentNode.id;
+  axios
+    .post(`/regularise/customer/${hash}`)
+    .then((res) => {
+      if (res.data.success) {
+        showAlert(res);
+        $(`tr#${hash}`).remove();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+$('i[title="Convertir"]').click((e) => {
+  e.preventDefault();
+  let hash = e.currentTarget.parentNode.parentNode.parentNode.id;
+  axios
+    .post(`/claim/prospect/${hash}`)
+    .then((res) => {
+      if (res.data.success) {
+        showAlert(res);
+        $(`tr#${hash}`).remove();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+$('a[href="#factureCustomerModal"]').click(() => {
   $("ul#toFacture li").each((i, obj) => {
     obj.remove();
   });
@@ -41,9 +77,8 @@ $('a[href="#facturerEmployeeModal"]').click(() => {
   });
 });
 
-$("#facturerEmployeeModalForm").submit((e) => {
+$("form#factureCustomerModalForm").submit((e) => {
   e.preventDefault();
-  console.log("Demande de facture");
   let datas = new FormData();
   datas.append(
     "customers",
@@ -51,41 +86,13 @@ $("#facturerEmployeeModalForm").submit((e) => {
   );
   datas.append("obj", $("#facturation-obj").val());
   axios
-    .post("facturer/default", datas)
+    .post("facturer/customers", datas)
     .then((res) => {
       console.log(res);
-      showModalAlert("facturerEmployeeModal", res);
+      showModalAlert("factureCustomerModal", res);
       $("#facturation-obj").val("");
     })
     .catch((err) => {
       console.log(err);
     });
-});
-
-$("input#pro").click((e) => {
-  if (e.target.checked) {
-    $("input#reg").prop("checked", false);
-  }
-});
-
-$('i[title="Convertir"]').click((e) => {
-  let hash = e.currentTarget.parentNode.parentNode.parentNode.id;
-  axios
-    .get(`/claim/prospect/${hash}`)
-    .then((res) => {
-      showAlert(res);
-      $(`tr#${hash}`).remove();
-    })
-    .catch((err) => console.log(err));
-});
-
-$('i[title="Régulariser"]').click((e) => {
-  let hash = e.currentTarget.parentNode.parentNode.parentNode.id;
-  axios
-    .get(`/regularise/customer/${hash}`)
-    .then((res) => {
-      showAlert(res);
-      $(`tr#${hash}`).remove();
-    })
-    .catch((err) => console.log(err));
 });

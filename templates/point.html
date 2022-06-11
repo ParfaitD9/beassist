@@ -1,62 +1,42 @@
-{% extends 'model.html' %} {% block content %}
-<div class="container">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li><a href="/customers">Clients</a></li>
-          <li><a href="/tasks">Tâches</a></li>
-          <li><a href="/factures">Factures</a></li>
-          <li><a href="/subtasks">Sous-tâches</a></li>
-          <li><a href="/packs">Packs</a></li>
-        </ul>
-      </div>
-      <!-- /.navbar-collapse -->
-    </div>
-    <!-- /.container-fluid -->
-  </nav>
-
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-6 col-md-4">
-        <div class="thumbnail">
-          <div class="caption">
-            <h1>{{cash}}</h1>
-            <span>CAD</span>
-            <p>C'est le nombre de dollars facturés ce mois.</p>
-            <p></p>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-6 col-md-4">
-        <div class="thumbnail">
-          <div class="caption">
-            <h1>{{casks}}</h1>
-            <span>tâches</span>
-            <p>C'est le nombre de tâches réalisés ce mois-ci</p>
-            <p></p>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-6 col-md-4">
-        <div class="thumbnail">
-          <div class="caption">
-            <h1>{{custs}}</h1>
-            <span>clients</span>
-            <p>C'est le nombre de nouveaux clients ce mois</p>
-          </div>
+{% extends '_model.html' %} {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+<main class="container">
+  <div class="row">
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <div class="caption">
+          <h1>{{cash}}</h1>
+          <span>CAD</span>
+          <p>C'est le nombre de dollars facturés ce mois.</p>
+          <p></p>
         </div>
       </div>
     </div>
-    <h1>Statistiques vues des factures</h1>
-    <canvas id="factures-cpt"></canvas>
-    <h1>Statistiques vues des tâches</h1>
-    <canvas id="tasks-cpt"></canvas>
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <div class="caption">
+          <h1>{{casks}}</h1>
+          <span>tâches</span>
+          <p>C'est le nombre de tâches réalisés ce mois-ci</p>
+          <p></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <div class="caption">
+          <h1>{{custs}}</h1>
+          <span>clients</span>
+          <p>C'est le nombre de nouveaux clients ce mois</p>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+  <h1>Statistiques vues des factures</h1>
+  <canvas id="factures-cpt"></canvas>
+  <h1>Statistiques vues des tâches</h1>
+  <canvas id="tasks-cpt"></canvas>
+</main>
 {% endblock %} {% block js %}
-<script src="/static/js/point.js"></script>
+<script src="/static/_js/point.js"></script>
 {% endblock %}

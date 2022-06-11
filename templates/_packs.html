@@ -1,23 +1,5 @@
-{% extends 'model.html' %} {% block content %}
-<div class="container">
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li><a href="/customers">Clients</a></li>
-          <li><a href="/tasks">Tâches</a></li>
-          <li><a href="/factures">Factures</a></li>
-          <li><a href="/subtasks">Sous-tâches</a></li>
-          <li><a href="/packs">Packs</a></li>
-          <li><a href="/make/point">Statistiques</a></li>
-        </ul>
-      </div>
-      <!-- /.navbar-collapse -->
-    </div>
-    <!-- /.container-fluid -->
-  </nav>
+{% extends '_model.html' %} {% block content %}
+<main class="container">
   <div class="table-wrapper">
     <div class="table-title">
       <div class="row">
@@ -25,10 +7,13 @@
           <h2>Manage <b>Packs</b></h2>
         </div>
         <div class="col-sm-6">
-          <a href="#addPackModal" class="btn btn-success" data-toggle="modal"
+          <a href="#addPackModal" class="btn btn-success" data-bs-toggle="modal"
             ><i class="bi bi-journal-plus"></i> <span>Add New Pack</span></a
           >
-          <a href="#deletePackModal" class="btn btn-danger" data-toggle="modal"
+          <a
+            href="#deletePackModal"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
             ><i class="bi bi-journal-minus"></i> <span>Delete</span></a
           >
         </div>
@@ -69,12 +54,8 @@
           <td>{{pack.customer}}</td>
           <td>{{pack.price()}}</td>
           <td>
-            <a href="#facturePackModal" class="edit" data-toggle="modal"
-              ><i
-                class="bi bi-file-plus"
-                title="Facturer"
-                data-toggle="tooltip"
-              ></i
+            <a href="#facturePackModal" class="edit" data-bs-toggle="modal"
+              ><i class="bi bi-file-plus" title="Facturer"></i
             ></a>
             <a href="#deletePackModal" class="delete"
               ><i class="bi bi-trash3" title="Delete"></i
@@ -89,24 +70,30 @@
       <ul class="pagination"></ul>
     </div>
   </div>
-</div>
-<!-- Add Modal HTML -->
-<div id="addPackModal" class="modal fade">
+</main>
+
+<!--Add Pack Modal-->
+<div
+  id="addPackModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="addPackModalLabel"
+>
   <div class="modal-dialog">
     <div class="modal-content">
       <form id="addPackModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">Add Pack</h4>
+          <h4 class="modal-title" id="addPackModalLabel">Add Pack</h4>
           <button
             type="button"
-            class="close"
-            data-dismiss="modal"
+            class="btn-close"
+            data-bs-dismiss="modal"
             aria-hidden="true"
-          >
-            &times;
-          </button>
+          ></button>
         </div>
-        <div class="alert" role="alert"></div>
+        <div class="alert" role="alert">
+          <p></p>
+        </div>
         <div class="modal-body">
           <div>
             <p>Sous-tâches associées</p>
@@ -125,7 +112,7 @@
             <label>Nom du Pack</label>
             <input
               type="text"
-              id="pack-name"
+              id="inputName"
               name="name"
               class="form-control"
               autocomplete="off"
@@ -134,10 +121,10 @@
           </div>
 
           <div class="form-group">
-            <label for="subtask">Sous tâche</label>
+            <label for="inputSubtask">Sous tâche</label>
             <input
               type="text"
-              id="subtask"
+              id="inputSubtask"
               name="subtask"
               class="form-control"
               list="subtasks"
@@ -145,16 +132,21 @@
             <datalist id="subtasks"> </datalist>
           </div>
           <div class="form-group">
-            <label for="value">Coût</label>
-            <input class="form-control" type="number" name="value" id="value" />
+            <label for="inputValue">Coût</label>
+            <input
+              class="form-control"
+              type="number"
+              name="value"
+              id="inputValue"
+            />
           </div>
         </div>
         <div class="modal-footer">
           <input
             type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
-            value="Cancel"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
           />
           <input
             type="button"
@@ -168,29 +160,33 @@
     </div>
   </div>
 </div>
-<!-- Facture Modal HTML -->
-<div id="facturePackModal" class="modal fade">
+<!--Facture Pack Modal-->
+<div
+  id="facturePackModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="facturePackModalLabel"
+>
   <div class="modal-dialog">
     <div class="modal-content">
       <form id="facturePackModalForm">
         <div class="modal-header">
-          <h4 class="modal-title">
+          <h4 class="modal-title" id="facturePackModalLabel">
             Facture Pack#<span id="facture-pack"></span>
           </h4>
           <button
             type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-hidden="true"
-          >
-            &times;
-          </button>
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
+        <div class="alert" role="alert"><p></p></div>
         <div class="modal-body">
           <div class="form-group">
             <label>Objet de la facture</label>
             <input
-              id="obj"
+              id="inputObj"
               type="text"
               name="obj"
               class="form-control"
@@ -202,50 +198,16 @@
         <div class="modal-footer">
           <input
             type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
-            value="Cancel"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
           />
-          <input type="submit" class="btn btn-info" value="Save" />
+          <input type="submit" class="btn btn-success" value="Save" />
         </div>
       </form>
     </div>
   </div>
 </div>
-<!-- Delete Modal HTML -->
-<div id="deletePackModal" class="modal fade">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form>
-        <div class="modal-header">
-          <h4 class="modal-title">Delete Pack</h4>
-          <button
-            type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-hidden="true"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>Are you sure you want to delete these Records?</p>
-          <p class="text-warning">
-            <small>This action cannot be undone.</small>
-          </p>
-        </div>
-        <div class="modal-footer">
-          <input
-            type="button"
-            class="btn btn-default"
-            data-dismiss="modal"
-            value="Cancel"
-          />
-          <input type="submit" class="btn btn-danger" value="Delete" />
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<script src="/static/js/packs.js"></script>
+{% endblock %} {% block js %}
+<script src="/static/_js/_packs.js"></script>
 {% endblock %}

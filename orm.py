@@ -24,12 +24,17 @@ class BaseModel(pw.Model):
         database = db
 
 
+class City(BaseModel):
+    pk = pw.IntegerField(primary_key=True)
+    name = pw.CharField()
+
+
 class Customer(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
     porte = pw.IntegerField()
     street = pw.CharField()
-    city = pw.CharField()
+    city = pw.ForeignKeyField(City, backref='customers')
     appart = pw.IntegerField(null=True)
     joined = pw.DateField(default=dt.today)
     postal = pw.CharField(max_length=12)

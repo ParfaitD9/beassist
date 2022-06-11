@@ -1,10 +1,11 @@
 import json
 import peewee as pw
 from flask import Flask, redirect,\
-    render_template, request, jsonify
-from orm import Customer, Facture, Pack, PackSubTask, SubTask, Task, db
+    render_template, request, jsonify, send_from_directory
+from orm import City, Customer, Facture, Pack, PackSubTask, SubTask, Task, db
 import dateparser as dp
 import datetime
+import os
 from datetimerange import DateTimeRange
 import warnings
 
@@ -22,6 +23,14 @@ def home():
     return redirect('/customers')
 
 
+@app.route('/api/cities')
+def cities():
+    return jsonify([
+        {'pk': city.pk, 'name': city.name}
+        for city in City.select()
+    ])
+
+
 @app.route('/customers')
 def customers():
     page = int(request.args.get('page', 1))
@@ -29,7 +38,7 @@ def customers():
         (Customer.regulier == True) &
         (Customer.prospect == False)
     ).paginate(page, 7).order_by(Customer.name.asc())
-    return render_template('employees.html', customers=emps)
+    return render_template('_customers.html', customers=emps)
 
 
 @app.route('/customers_')
@@ -39,10 +48,10 @@ def customers_():
         (Customer.regulier == False) &
         (Customer.prospect == False)
     ).paginate(page, 7).order_by(Customer.city.asc())
-    return render_template('employees.html', customers=emps, irr=True)
+    return render_template('_customers.html', customers=emps, irr=True)
 
 
-@app.route('/regularise/customer/<int:pk>')
+@app.route('/regularise/customer/<int:pk>', methods=['POST'])
 def regulatise_cust(pk):
     try:
         c: Customer = Customer.get(pk=pk)
@@ -66,10 +75,10 @@ def prospects():
     pros = Customer.select().where(
         Customer.prospect == True
     ).paginate(page, 7).order_by(Customer.city.asc())
-    return render_template('employees.html', customers=pros, pro=True)
+    return render_template('_customers.html', customers=pros, pro=True)
 
 
-@app.route('/claim/prospect/<int:pk>')
+@app.route('/claim/prospect/<int:pk>', methods=['POST'])
 def claim(pk):
     try:
         c: Customer = Customer.get(pk=pk)
@@ -94,9 +103,12 @@ def get_prospects():
 
 @app.route('/create/customer', methods=['POST'])
 def c_customer():
-    r = dict(request.form)
-    print(r)
+    r = request.form.to_dict()
     try:
+        city, _ = City.get_or_create(name=r.get('city'))
+        r.update({
+            'city': city.pk
+        })
         c = Customer.create(**r) if request.form.get('regulier')\
             else Customer.create(**r, regulier=False)
     except (Exception,) as e:
@@ -132,18 +144,19 @@ def d_customer(pk):
 def get_customers():
     return jsonify([{'pk': c.pk, 'name': c.name} for c in Customer.select().order_by(Customer.name.asc())])
 
+# =================================== BEGIN TASK ==================================
+
 
 @app.route('/tasks')
 def tasks():
     page = int(request.args.get('page', 1))
     tasks = Task.select().paginate(page, 7).order_by(Task.executed_at.desc())
-    return render_template('tasks.html', tasks=tasks)
+    return render_template('_tasks.html', tasks=tasks)
 
 
 @app.route('/create/task', methods=['POST'])
 def c_task():
-    r = dict(request.form)
-    print(r)
+    r = request.form.to_dict()
     try:
         t = Task.create(**r)
     except (Exception,) as e:
@@ -224,7 +237,7 @@ def range_tasks(debut, fin):
 def factures():
     page = int(request.args.get('page', 1))
     return render_template(
-        'factures.html',
+        '_factures.html',
         factures=Facture.select().where(Facture.soumission ==
                                         False).paginate(page, 7).order_by(Facture.date.desc())
     )
@@ -234,7 +247,7 @@ def factures():
 def soumissions():
     page = int(request.args.get('page', 1))
     return render_template(
-        'factures.html',
+        '_factures.html',
         factures=Facture.select().where(Facture.soumission ==
                                         True).paginate(page, 7).order_by(Facture.date.desc()),
         soum=True
@@ -359,7 +372,7 @@ def send_facture():
 @app.route('/subtasks')
 def subtasks():
     page = int(request.args.get('page', 1))
-    return render_template('subtasks.html', subtasks=SubTask.select().paginate(page, 7))
+    return render_template('_subtasks.html', subtasks=SubTask.select().paginate(page, 7))
 
 
 @app.route('/create/subtask', methods=['POST'])
@@ -404,7 +417,7 @@ def get_subtasks():
 @app.route('/packs')
 def packs():
     page = int(request.args.get('page', 1))
-    return render_template('packs.html', packs=Pack.select().paginate(page, 7))
+    return render_template('_packs.html', packs=Pack.select().paginate(page, 7))
 
 
 @app.route('/create/pack', methods=['POST'])
@@ -498,8 +511,8 @@ def view_pack(pk):
     return render_template('view-pack.html', pack=pack, subtasks=subs)
 
 
-@app.route('/facturer/default', methods=['POST'])
-def facture_default():
+@app.route('/facturer/customers', methods=['POST'])
+def facturer_customers():
     _cus = json.loads(request.form.get('customers'))
     try:
         for _cli in _cus:
@@ -554,6 +567,11 @@ def make_point():
     casks = Task.select().where(month <= Task.executed_at <= today).count()
     cust = Customer.select().where(month <= Customer.joined <= today).count()
     return render_template('point.html', cash=cash, casks=casks, custs=cust)
+
+
+@app.route('/view/<hash>')
+def view_pdf(hash):
+    return send_from_directory(os.getenv('DOCS_PATH'), f'{hash}.pdf')
 
 
 if __name__ == '__main__':

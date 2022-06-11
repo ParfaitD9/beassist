@@ -1,7 +1,6 @@
 $("form#addSubtaskModalForm").submit((e) => {
-  let form = document.getElementById("addSubtaskModalForm");
   e.preventDefault();
-  let datas = new FormData(form);
+  let datas = new FormData(document.getElementById("addSubtaskModalForm"));
   axios
     .post("/create/subtask", datas)
     .then((res) => {

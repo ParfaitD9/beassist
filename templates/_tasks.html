@@ -1,0 +1,155 @@
+{% extends '_model.html' %} {% block content %}
+<main class="container">
+  <div class="table-wrapper">
+    <div class="table-title">
+      <div class="row">
+        <div class="col-sm-6">
+          <h2>Manage <b>Tasks</b></h2>
+        </div>
+        <div class="col-sm-6">
+          <a href="#addTaskModal" class="btn btn-success" data-bs-toggle="modal"
+            ><i class="bi bi-journal-plus"></i> <span>Add New Task</span></a
+          >
+          <a
+            href="#deleteTaskModal"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            ><i class="bi bi-journal-minus"></i> <span>Delete</span></a
+          >
+        </div>
+      </div>
+    </div>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>
+            <span class="custom-checkbox">
+              <input type="checkbox" id="selectAll" />
+              <label for="selectAll"></label>
+            </span>
+          </th>
+          <th>Tâche</th>
+          <th>Coût</th>
+          <th>Exécutée à</th>
+          <th>Client</th>
+          <th>Facture</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr id="{{task.pk}}">
+          <td>
+            <span class="custom-checkbox">
+              <input
+                type="checkbox"
+                id="checkbox1"
+                name="options[]"
+                value="1"
+              />
+              <label for="checkbox1"></label>
+            </span>
+          </td>
+          <td>{{task.name}}</td>
+          <td>{{task.price}}</td>
+          <td>{{task.executed_at}}</td>
+          <td>{{task.customer}}</td>
+          <td>{{task.facture.hash}}</td>
+          <td>
+            <a href="#" class="edit"
+              ><i class="bi bi-file-minus" title="Défacturer"></i
+            ></a>
+            <a href="#" class="delete"
+              ><i class="bi bi-trash3" data-toggle="tooltip" title="Delete"></i
+            ></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="clearfix">
+      <div class="hint-text">Showing <b>5</b> out of <b>25</b> entries</div>
+      <ul class="pagination"></ul>
+    </div>
+  </div>
+</main>
+
+<!--Add Task Modal-->
+<div
+  id="addTaskModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="addTaskModallablel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addTaskModalForm" autocomplete="off">
+        <div class="modal-header">
+          <h4 class="modal-title" id="addTaskModallablel">Add Task</h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="alert" role="alert">
+          <p></p>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nom</label>
+            <input
+              type="text"
+              name="name"
+              class="form-control"
+              list="subtasks"
+              required
+            />
+            <datalist id="subtasks"> </datalist>
+          </div>
+          <div class="form-group">
+            <label>Coût</label>
+            <input
+              type="number"
+              name="price"
+              class="form-control"
+              step="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Executée à</label>
+            <input
+              type="date"
+              name="executed_at"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Client</label>
+            <select
+              name="customer"
+              id="customers"
+              class="form-control"
+            ></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
+          />
+          <input type="submit" class="btn btn-primary" value="Add" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block js %}
+<script src="/static/_js/_tasks.js"></script>
+{% endblock %}

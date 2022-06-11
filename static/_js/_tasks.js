@@ -1,7 +1,13 @@
-$("#addTaskModalForm").submit((e) => {
-  let form = document.getElementById("addTaskModalForm");
+$(document).ready((e) => {
+  paginate();
+  load_customers();
+  load_subtasks();
+});
+
+$("form#addTaskModalForm").submit((e) => {
   e.preventDefault();
-  let datas = new FormData(form);
+  let datas = new FormData(e.target);
+
   axios
     .post("/create/task", datas)
     .then((res) => {
@@ -13,21 +19,23 @@ $("#addTaskModalForm").submit((e) => {
 
 $("a.delete").click((e) => {
   e.preventDefault();
-  let _id = e.target.parentNode.parentNode.parentNode.id;
+  let hash = e.target.parentNode.parentNode.parentNode.id;
   axios
-    .post(`/delete/task/${_id}`)
+    .post(`/delete/task/${hash}`)
     .then((res) => {
       if (res.data.success) {
-        $(`tr#${_id}`).remove();
+        showAlert(res);
+        $(`tr#${hash}`).remove();
       }
-      showAlert(res);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
-$("a.edit").click((e) => {
+$('i[title="Défacturer"]').click((e) => {
   e.preventDefault();
-  let _id = e.target.parentNode.parentNode.parentNode.id;
+  let _id = e.currentTarget.parentNode.parentNode.parentNode.id;
   axios
     .post(`/defacture/task/${_id}`)
     .then((res) => {
