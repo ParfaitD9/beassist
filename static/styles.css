@@ -255,3 +255,6 @@ div.caption h1 {
 div.caption span {
     font-weight: bold;
 }
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
