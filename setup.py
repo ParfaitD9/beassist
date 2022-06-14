@@ -10,7 +10,7 @@ if __name__ == '__main__':
         db.drop_tables([Customer, Task, Facture, Pack,
                        PackSubTask, SubTask])
         db.create_tables([Customer, Task, Facture, Pack,
-                         PackSubTask, SubTask])
+                         PackSubTask, SubTask, City])
         db.close()
     except Exception as e:
         logging.error(
