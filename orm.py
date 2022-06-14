@@ -37,6 +37,7 @@ class City(BaseModel):
 
     @staticmethod
     def load_from_csv(filename='./csv/cities.csv'):
+        City.delete().execute()
         with open(filename) as f:
             r = csv.reader(f)
             with db.atomic():
