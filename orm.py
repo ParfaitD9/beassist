@@ -38,7 +38,7 @@ class City(BaseModel):
     @staticmethod
     def load_from_csv(filename='./csv/cities.csv'):
         City.delete().execute()
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             r = csv.reader(f)
             with db.atomic():
                 for (city,) in list(r)[1:]:
@@ -133,7 +133,7 @@ class Customer(BaseModel):
     @staticmethod
     def load_from_csv(filename='./csv/customers.csv'):
         Customer.delete().execute()
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             reader = csv.reader(f)
             with db.atomic():
                 for nom, porte, street, city, appart, joined, postal, prov, mail, ph, stt, reg, pp in list(reader)[1:]:
@@ -495,7 +495,7 @@ class PackSubTask(BaseModel):
     def load_from_csv(filename='./csv/packs.csv'):
         PackSubTask.delete().execute()
         with db.atomic():
-            with open(filename) as f:
+            with open(filename, encoding='utf-8') as f:
                 r = csv.reader(f)
                 for cus, task, price in r:
                     c: Customer = Customer.get(name=cus)
