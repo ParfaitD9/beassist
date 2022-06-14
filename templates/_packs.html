@@ -51,7 +51,7 @@
           <td>
             <a href="{{url_for('view_pack', pk=pack.pk)}}">{{pack.name}}</a>
           </td>
-          <td>{{pack.customer}}</td>
+          <td>{{pack.customer.name}}</td>
           <td>{{pack.price()}}</td>
           <td>
             <a href="#facturePackModal" class="edit" data-bs-toggle="modal"
