@@ -53,8 +53,12 @@
           <td>{{task.name}}</td>
           <td>{{task.price}}</td>
           <td>{{task.executed_at}}</td>
-          <td>{{task.customer}}</td>
-          <td>{{task.facture.hash}}</td>
+          <td>{{task.customer.name}}</td>
+          <td>
+            <a href="/view/{{task.facture.hash}}" target="_blank"
+              >{{task.facture.hash}}</a
+            >
+          </td>
           <td>
             <a href="#" class="edit"
               ><i class="bi bi-file-minus" title="Défacturer"></i

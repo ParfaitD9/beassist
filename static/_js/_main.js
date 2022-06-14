@@ -112,6 +112,7 @@ function showModalAlert(modalId, res) {
   } else {
     msg.classList.remove("alert-success");
     msg.classList.add("alert-danger");
+    console.log(res.data.message);
   }
   msg.querySelector("p").textContent = `${res.data.message}`;
 }

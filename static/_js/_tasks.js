@@ -23,8 +23,8 @@ $("a.delete").click((e) => {
   axios
     .post(`/delete/task/${hash}`)
     .then((res) => {
+      showAlert(res);
       if (res.data.success) {
-        showAlert(res);
         $(`tr#${hash}`).remove();
       }
     })

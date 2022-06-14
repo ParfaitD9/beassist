@@ -15,6 +15,9 @@ database.*
 *.db3
 tests.py
 *.csv
+!csv/cities.csv
+!csv/customers.csv
+!csv/packs.csv
 enerv.py
 credentials.json
 *.pickle

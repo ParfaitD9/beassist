@@ -11,10 +11,10 @@
             ><i class="bi bi-journal-plus"></i> <span>Add New Pack</span></a
           >
           <a
-            href="#deletePackModal"
-            class="btn btn-danger"
+            href="#facturePacksModal"
+            class="btn btn-warning"
             data-bs-toggle="modal"
-            ><i class="bi bi-journal-minus"></i> <span>Delete</span></a
+            ><i class="bi bi-journal-minus"></i> <span>Facturer</span></a
           >
         </div>
       </div>
@@ -43,7 +43,7 @@
                 type="checkbox"
                 id="checkbox1"
                 name="options[]"
-                value="1"
+                value="{{pack.pk}}"
               />
               <label for="checkbox1"></label>
             </span>
@@ -194,6 +194,59 @@
               required
             />
           </div>
+        </div>
+        <div class="modal-footer">
+          <input
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            value="Annuler"
+          />
+          <input type="submit" class="btn btn-success" value="Save" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!--Facture Packs Modal-->
+<div
+  id="facturePacksModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="facturePacksModalLabel"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="facturePacksModalForm">
+        <div class="modal-header">
+          <h4 class="modal-title" id="facturePacksModalLabel">
+            Facturation de masse
+          </h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="alert" role="alert"><p></p></div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Objet de la facture</label>
+            <input
+              id="inputMasseObj"
+              type="text"
+              name="masseObj"
+              class="form-control"
+              placeholder="Ex : Facture du mois de Mars"
+              required
+            />
+          </div>
+          <small class="text-warning"
+            >La facturation peut prendre un certain temps en fonction du nombre
+            de pack. Ne quittez pas la page</small
+          >
         </div>
         <div class="modal-footer">
           <input

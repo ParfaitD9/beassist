@@ -8,7 +8,16 @@ import datetime
 import os
 from datetimerange import DateTimeRange
 import warnings
+import logging
 
+logging.basicConfig(
+    filename='beassist.log',
+    filemode='a',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    format='[%(levelname)s] %(asctime)s | %(message)s',
+    level=logging.WARNING,
+    encoding='utf-8'
+)
 
 warnings.filterwarnings(
     "ignore",
@@ -256,7 +265,6 @@ def soumissions():
 
 @app.route('/create/facture', methods=['POST'])
 def c_facture():
-    print(request.form.get('customer'))
     try:
         f = Facture.generate(
             int(request.form.get('customer')),
@@ -270,7 +278,7 @@ def c_facture():
                 'message': 'Facture non générée'
             }
     except (Exception, ) as e:
-        print(f'{e} : {e.args[0]}')
+        logging.error(f'{e} : {e.args[0]}')
         return {
             'success': False,
             'message': f'{e.__class__} : {e.args[0]}'
@@ -304,6 +312,25 @@ def d_facture(hash: str):
                 'success': False,
                 'message': 'Facture déjà envoyé ou toujours associée à des tâches'
             })
+
+
+@app.route('/facture/mass', methods=['POST'])
+def facturaction_mass():
+    packs: list[str] = json.loads(request.form.get('packs'))
+    for _id in packs:
+        pack: Pack = Pack.get(pk=_id)
+        try:
+            f = pack.generate_facture(request.form.get('msg'))
+        except (Exception, ) as e:
+            return jsonify({
+                'success': False,
+                'message': f'{e.__class__} : {e.args[0]} pour le pack {_id}. La facturation s\'est arrêté là'
+            })
+
+    return jsonify({
+        'success': True,
+        'message': 'Tous les packs ont été facturés avec succès'
+    })
 
 
 @app.route('/api/factures/<date>')
@@ -351,7 +378,13 @@ def send_facture():
     )
     try:
         if not facture.sent:
-            facture.send(request.form.get('message').strip())
+            if facture.customer.email:
+                facture.send(request.form.get('message').strip())
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Courriel non disponible pour le propriétaire de la facture'
+                })
         else:
             return jsonify({
                 'success': False,
@@ -417,15 +450,14 @@ def get_subtasks():
 @app.route('/packs')
 def packs():
     page = int(request.args.get('page', 1))
-    return render_template('_packs.html', packs=Pack.select().paginate(page, 7))
+    return render_template('_packs.html', packs=Pack.select().paginate(page, 7).order_by(Pack.customer.asc()))
 
 
 @app.route('/create/pack', methods=['POST'])
 def c_pack():
-    print(request.form)
     pack = json.loads(request.form.get('data'))
     c: Customer = Customer.get(pk=int(pack.get('customer')))
-    print(pack)
+
     with db.atomic():
         try:
             p = Pack.create(

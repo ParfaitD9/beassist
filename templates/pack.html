@@ -73,8 +73,8 @@
       <div style="margin-top: 2.5em">
         <p>{{client.name}}</p>
         <p>{{client.addresse()}}</p>
-        <p>{{client.postal}} {{client.phone}}</p>
-        <p>{{client.email}}</p>
+        <p>{{client.postal}} {{client.phone if client.phone else ''}}</p>
+        <p>{{client.email if client.email else ''}}</p>
       </div>
 
       <div class="elastic" style="align-items: center; justify-content: center">

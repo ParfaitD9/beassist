@@ -1,4 +1,4 @@
-from email.policy import default
+import csv
 import shutil
 import peewee as pw
 from mailer import gmail_authenticate, send_message
@@ -11,6 +11,7 @@ from jinja2 import Template
 from tabulate import tabulate
 import time
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -28,13 +29,42 @@ class City(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
 
+    def serialize(self):
+        return {
+            'pk': self.pk,
+            'name': self.name
+        }
+
+    @staticmethod
+    def load_from_csv(filename='./csv/cities.csv'):
+        with open(filename) as f:
+            r = csv.reader(f)
+            with db.atomic():
+                for (city,) in list(r)[1:]:
+                    c, _ = City.get_or_create(name=city)
+                    logging.info(f'Ville {c.name} créé !')
+
+    @staticmethod
+    def dump_to_csv(filename='./csv/cities.csv'):
+        with open(filename, 'w') as f:
+            w = csv.writer(f)
+            w.writerow(['name', ])
+            with db.atomic():
+                w.writerows([[city.name, ] for city in City.select()])
+
+    def __str__(self):
+        return f'Ville : {self.name}'
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
 
 class Customer(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
     porte = pw.IntegerField()
     street = pw.CharField()
-    city = pw.ForeignKeyField(City, backref='customers')
+    city: City = pw.ForeignKeyField(City, backref='customers')
     appart = pw.IntegerField(null=True)
     joined = pw.DateField(default=dt.today)
     postal = pw.CharField(max_length=12)
@@ -56,9 +86,9 @@ class Customer(BaseModel):
 
     def addresse(self) -> str:
         return (
-            f'{self.porte} {self.street} app {self.appart} {self.city}'
+            f'{self.porte} {self.street} app {self.appart} {self.city.name}'
             if self.appart else
-            f'{self.porte} {self.street} {self.city}'
+            f'{self.porte} {self.street} {self.city.name}'
         )
 
     def billet(self) -> str:
@@ -77,12 +107,62 @@ class Customer(BaseModel):
             dt.today().strftime('%Y-%m-%d')
         )
 
+    def serialize(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'porte': self.porte,
+            'street': self.street,
+            'city': self.city.serialize(),
+            'appart': self.appart,
+            'joined': self.joined,
+            'postal': self.postal,
+            'province': self.province,
+            'email': self.email,
+            'phone': self.phone,
+            'statut': self.statut,
+            'regulier': self.regulier,
+            'prospect': self.prospect
+        }
+
     def claim(self):
         self.prospect = False
         self.save()
 
+    @staticmethod
+    def load_from_csv(filename='./csv/customers.csv'):
+        Customer.delete().execute()
+        with open(filename) as f:
+            reader = csv.reader(f)
+            with db.atomic():
+                for nom, porte, street, city, appart, joined, postal, prov, mail, ph, stt, reg, pp in list(reader)[1:]:
+                    city, _ = City.get_or_create(pk=int(city))
+                    city: City
+                    infos = {
+                        'name': nom,
+                        'porte': int(porte),
+                        'street': street,
+                        'city': city.pk,
+                        'appart': appart if appart else None,
+                        'joined': joined if joined else dt.today(),
+                        'postal': postal,
+                        'province': prov,
+                        'email': mail if mail else None,
+                        'phone': ph,
+                        'statut': stt,
+                        'regulier': bool(int(reg)),
+                        'prospect': bool(int(pp))
+                    }
+                    c: Customer = Customer.create(**infos)
+                    logging.info(f'Client {c.name} créé')
+
+    @staticmethod
+    def dump_to_csv(filename='./csv/customers.csv'):
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f)
+
     def __str__(self):
-        return self.name
+        return f'Client : {self.name}'
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -120,17 +200,19 @@ class Facture(BaseModel):
                 exp = ((_tmp <= Task.executed_at <= _fin)
                        & (Task.customer == client)
                        & (Task.facture == None))
-                print(f'Tâches du {_tmp} au {_fin}')
+                logging.info(
+                    f'Génération de facture pour les tâches du {_tmp} au {_fin}')
 
             else:
-                print(f'Tâches du {_tmp}')
+                logging.info(
+                    f'Génération de facture pour les tâches du {_tmp}')
                 exp = ((Task.executed_at == _tmp)
                        & (Task.customer == client)
                        & (Task.facture == None))
 
             tasks = Task.select().where(exp).order_by(Task.executed_at.asc())
         except Exception as e:
-            print("One or multiple args seems invalid")
+            logging.debug("One or multiple args seems invalid")
             return
         _hash = hb.blake2b(
             (f'{client.pk}#{tmp}:{fin}' if fin else f'{client.pk}#{tmp}').encode(),
@@ -167,10 +249,9 @@ class Facture(BaseModel):
                         DOCS_PATH, f'{_hash}.pdf')
                     )
                 except Exception as e:
-                    print(e.__class__, e.args[0])
+                    logging.error(e.__class__, e.args[0])
                 else:
                     try:
-                        print(_hash)
                         f = Facture.create(
                             hash=_hash,
                             customer_id=client.pk,
@@ -179,15 +260,16 @@ class Facture(BaseModel):
                             obj=obj
                         )
                     except (pw.IntegrityError,) as e:
-                        print("Same facture seems already exists.")
+                        logging.debug("Same facture seems already exists.")
                     else:
                         query = Task.update(facture=f).where(exp)
                         query.execute()
-                        print(f"Facture {_hash} generated")
+                        logging.info(f"Facture {_hash} generated")
 
                         return f
         else:
-            print("Pas de tâches non facturés trouvées pour cette date ou cet intervalle")
+            logging.warning(
+                "Pas de tâches non facturés trouvées pour cette date ou cet intervalle")
 
     @staticmethod
     def lister(debut=None, fin=None):
@@ -201,7 +283,7 @@ class Facture(BaseModel):
 
         if debut and fin:
             debut, fin = dp.parse(debut), dp.parse(fin)
-            print(f'Factures du {debut} au {fin}')
+            logging.info(f'Affichage des factures du {debut} au {fin}')
             facs = [[fac.hash, fac.customer, fac.date, 'Oui' if fac.sent else 'Non']
                     for fac in Facture.select().where(debut <= Facture.date <= fin)]
         else:
@@ -248,18 +330,18 @@ class Facture(BaseModel):
                     [f'./docs/{self.hash}.pdf']
                 )
             except (Exception,) as e:
-                print(f'{e} sending mail to {receiver}')
+                logging.error(
+                    f'{e.__class__} {e.args[0]} in sending mail to {receiver}')
             else:
                 self.sent = True
                 self.save()
                 if not self.soumission:
                     self.regenerate()
-                print(
-                    f'Facture {self.hash} send to {receiver}. \n Code: \n {r}')
+                logging.info(
+                    f'Facture {self.hash} send to {receiver}.')
 
                 return True
         else:
-            print('Facture déjà envoyé')
             return False
 
     def delete_(self):
@@ -270,9 +352,9 @@ class Facture(BaseModel):
         except (FileNotFoundError, ) as e:
             pass
         except (Exception,) as e:
-            print(f'{e.__class__} : {e.args[0]}')
+            logging.error(f'{e.__class__} : {e.args[0]}')
         finally:
-            print('Facture successfully deleted')
+            logging.info(f'Facture {self.hash} successfully deleted')
 
     def ht(self):
         return sum((task.price for task in self.tasks))
@@ -331,9 +413,10 @@ class SubTask(BaseModel):
 class Pack(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
-    customer: Customer = pw.ForeignKeyField(Customer, unique=True)
+    customer: Customer = pw.ForeignKeyField(
+        Customer, unique=True, backref='pack')
 
-    def generate_facture(self, obj):
+    def generate_facture(self, obj) -> Facture:
         _hash = hb.blake2b(
             f'{self.name}:{obj}:{int(time.time())}'.encode(),
             digest_size=4,
@@ -369,7 +452,7 @@ class Pack(BaseModel):
             try:
                 pdfkit.from_string(t, os.path.join(DOCS_PATH, f'{_hash}.pdf'))
             except Exception as e:
-                print(e.__class__, e.args[0])
+                logging.error(e.__class__, e.args[0])
             else:
                 try:
                     f = Facture.create(
@@ -381,9 +464,9 @@ class Pack(BaseModel):
                         soumission=True if client.prospect else False
                     )
                 except (pw.IntegrityError,) as e:
-                    print("Same facture seems already exists.")
+                    logging.debug("Same facture seems already exists.")
                 else:
-                    print(f"Facture {_hash} generated")
+                    logging.info(f"Facture {_hash} generated")
                     if not f.soumission:
                         t = Task.create(
                             name=f.obj,
@@ -406,3 +489,23 @@ class PackSubTask(BaseModel):
     value = pw.DecimalField(default=0.00, null=True)
     subtask: SubTask = pw.ForeignKeyField(SubTask)
     pack: Pack = pw.ForeignKeyField(Pack, on_delete='CASCADE')
+
+    @staticmethod
+    def load_from_csv(filename='./csv/packs.csv'):
+        PackSubTask.delete().execute()
+        with db.atomic():
+            with open(filename) as f:
+                r = csv.reader(f)
+                for cus, task, price in r:
+                    c: Customer = Customer.get(name=cus)
+                    st, _ = SubTask.get_or_create(name=task)
+                    pack, _ = Pack.get_or_create(
+                        customer=c,
+                        name=f'Pack : {c.name}'
+                    )
+
+                    psk = PackSubTask.create(
+                        subtask=st,
+                        pack=pack,
+                        value=float(price.replace(',', '.'))
+                    )
