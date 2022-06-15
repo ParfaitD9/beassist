@@ -46,7 +46,7 @@ def customers():
     emps = Customer.select().where(
         (Customer.regulier == True) &
         (Customer.prospect == False)
-    ).paginate(page, 7).order_by(Customer.name.asc())
+    ).paginate(page, 50).order_by(Customer.city.asc())
     return render_template('_customers.html', customers=emps)
 
 
@@ -56,7 +56,7 @@ def customers_():
     emps = Customer.select().where(
         (Customer.regulier == False) &
         (Customer.prospect == False)
-    ).paginate(page, 7).order_by(Customer.city.asc())
+    ).paginate(page, 50).order_by(Customer.city.asc())
     return render_template('_customers.html', customers=emps, irr=True)
 
 
@@ -83,7 +83,7 @@ def prospects():
     page = int(request.args.get('page', 1))
     pros = Customer.select().where(
         Customer.prospect == True
-    ).paginate(page, 7).order_by(Customer.city.asc())
+    ).paginate(page, 50).order_by(Customer.city.asc())
     return render_template('_customers.html', customers=pros, pro=True)
 
 
@@ -153,13 +153,18 @@ def d_customer(pk):
 def get_customers():
     return jsonify([{'pk': c.pk, 'name': c.name} for c in Customer.select().order_by(Customer.name.asc())])
 
+
+@app.route('/view/customer/<int:pk>')
+def view_customer(pk):
+    c: Customer = Customer.get(pk=pk)
+    return render_template('view-customer.html', customer=c)
 # =================================== BEGIN TASK ==================================
 
 
 @app.route('/tasks')
 def tasks():
     page = int(request.args.get('page', 1))
-    tasks = Task.select().paginate(page, 7).order_by(Task.executed_at.desc())
+    tasks = Task.select().paginate(page, 50).order_by(Task.executed_at.desc())
     return render_template('_tasks.html', tasks=tasks)
 
 
@@ -248,7 +253,7 @@ def factures():
     return render_template(
         '_factures.html',
         factures=Facture.select().where(Facture.soumission ==
-                                        False).paginate(page, 7).order_by(Facture.date.desc())
+                                        False).paginate(page, 50).order_by(Facture.date.desc())
     )
 
 
@@ -258,7 +263,7 @@ def soumissions():
     return render_template(
         '_factures.html',
         factures=Facture.select().where(Facture.soumission ==
-                                        True).paginate(page, 7).order_by(Facture.date.desc()),
+                                        True).paginate(page, 50).order_by(Facture.date.desc()),
         soum=True
     )
 
@@ -405,7 +410,7 @@ def send_facture():
 @app.route('/subtasks')
 def subtasks():
     page = int(request.args.get('page', 1))
-    return render_template('_subtasks.html', subtasks=SubTask.select().paginate(page, 7))
+    return render_template('_subtasks.html', subtasks=SubTask.select().paginate(page, 50))
 
 
 @app.route('/create/subtask', methods=['POST'])
@@ -450,7 +455,7 @@ def get_subtasks():
 @app.route('/packs')
 def packs():
     page = int(request.args.get('page', 1))
-    return render_template('_packs.html', packs=Pack.select().paginate(page, 7).order_by(Pack.customer.asc()))
+    return render_template('_packs.html', packs=Pack.select().paginate(page, 50).order_by(Pack.customer.asc()))
 
 
 @app.route('/create/pack', methods=['POST'])

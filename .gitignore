@@ -4,6 +4,7 @@ __pycache__
 docs/*
 compta/*
 !docs/.gitkeep
+!csv/.gitkeep
 !compta/.gitkeep
 *.pdf
 .env

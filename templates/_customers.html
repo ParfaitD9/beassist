@@ -51,14 +51,16 @@
               <label for="checkbox1"></label>
             </span>
           </td>
-          <td>{{client.name}}</td>
+          <td><a href="/view/customer/{{client.pk}}">{{client.name}}</a></td>
           <td>
+            {% if client.email %}
             <a target="_blank" href="mailto:{{client.email}}"
               >{{client.email}}</a
             >
+            {% else %} Inconnu {% endif %}
           </td>
           <td>{{client.postal}}</td>
-          <td>{{client.phone}}</td>
+          <td>{{client.phone if client.phone else "Inconnu"}}</td>
           <td>
             <a href="#" class="delete" data-toggle="modal"
               ><i class="bi bi-trash3" title="Delete"></i
@@ -78,7 +80,7 @@
       </tbody>
     </table>
     <div class="clearfix">
-      <div class="hint-text">Affichage de <b>7</b> résultats</div>
+      <div class="hint-text">Affichage de <b>50</b> résultats</div>
       <ul class="pagination"></ul>
     </div>
   </div>

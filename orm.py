@@ -149,7 +149,7 @@ class Customer(BaseModel):
                         'postal': postal,
                         'province': prov,
                         'email': mail if mail else None,
-                        'phone': ph,
+                        'phone': ph if ph else None,
                         'statut': stt,
                         'regulier': bool(int(reg)),
                         'prospect': bool(int(pp))
