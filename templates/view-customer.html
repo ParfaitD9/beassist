@@ -50,6 +50,14 @@
             <th scope="row">Prospect ?</th>
             <td>{{ "Oui" if customer.prospect else "Non" }}</td>
           </tr>
+          <tr>
+            <th scope="row">Pack</th>
+            <td>
+              <a href="/view/pack/{{customer.pack[0].pk}}"
+                >{{customer.pack[0].name}} : {{customer.pack[0].price()}} CAD</a
+              >
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
