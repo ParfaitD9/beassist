@@ -158,9 +158,48 @@ class Customer(BaseModel):
                     logging.info(f'Client {c.name} créé')
 
     @staticmethod
-    def dump_to_csv(filename='./csv/customers.csv'):
+    def backup(filename='./backup/customers.csv'):
+        fields = ['pk', 'name', 'porte', 'street', 'city', 'appart', 'joined',
+                  'postal', 'province', 'email', 'phone', 'statut', 'regulier', 'prospect']
         with open(filename, 'w') as f:
-            w = csv.DictWriter(f)
+            w = csv.DictWriter(f, fieldnames=fields)
+            w.writeheader()
+            for cus in Customer.select():
+                cus: Customer
+                _cus = cus.serialize()
+                _cus.update({'city': cus.city.name})
+                w.writerow(_cus)
+
+    @staticmethod
+    def load_backup(filename='./backup/customers.csv'):
+        fields = ['pk', 'name', 'porte', 'street', 'city', 'appart', 'joined',
+                  'postal', 'province', 'email', 'phone', 'statut', 'regulier', 'prospect']
+        Customer.delete().execute()
+        with open(filename, 'r') as f:
+            r = csv.DictReader(f)
+            with db.atomic():
+                for cus in r:
+                    Customer.create(**Customer.clean(cus))
+
+    @staticmethod
+    def clean(read: dict):
+        r = {
+            'name': read.get('name'),
+            'porte': int(read.get('porte')),
+            'street': read.get('street'),
+            'city': read.get('city'),
+            'appart': read.get('appart') if read.get('appart') else None,
+            'joined': read.get('joined') if read.get('joined') else dt.today(),
+            'postal': read.get('postal'),
+            'province': read.get('province'),
+            'email': read.get('email') if read.get('email') else None,
+            'phone': read.get('phone') if read.get('phone') else None,
+            'statut': read.get('statut'),
+            'regulier': True if read.get('regulier') == "True" else False,
+            'prospect': True if read.get('prospect') == "True" else False
+        }
+
+        return r
 
     def __str__(self):
         return f'Client : {self.name}'
@@ -309,6 +348,52 @@ class Facture(BaseModel):
             facture: Facture
             facture.send()
 
+    @staticmethod
+    def clean(read: dict):
+        return {
+            'hash': read.get('hash'),
+            'date': read.get('date'),
+            'sent': True if read.get('sent') == "True" else False,
+            'cout': float(read.get('cout')),
+            'obj': read.get('obj'),
+            'soumission': True if read.get('soumission') == "True" else False,
+            'customer': int(read.get('customer'))
+        }
+
+    @staticmethod
+    def backup(filename='./backup/factures.csv'):
+        fields = ['hash', 'date', 'sent', 'cout',
+                  'obj', 'soumission', 'customer']
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f, fieldnames=fields)
+            for fac in Facture.select():
+                fac: Facture
+                _fac = fac.serialize()
+                _fac.update({'customer': fac.customer.pk})
+                w.writerow(_fac)
+
+    @staticmethod
+    def load_backup(filename='./backup/factures.csv'):
+        fields = ['hash', 'date', 'sent', 'cout',
+                  'obj', 'soumission', 'customer']
+        Facture.delete().execute()
+        with db.atomic():
+            with open(filename) as f:
+                r = csv.DictReader(f, fieldnames=fields)
+                for fac in r:
+                    Facture.create(**Facture.clean(fac))
+
+    def serialize(self):
+        return {
+            'hash': self.hash,
+            'date': self.date,
+            'sent': self.sent,
+            'cout': self.cout,
+            'obj': self.obj,
+            'soumission': self.soumission,
+            'customer': self.customer.serialize()
+        }
+
     def regenerate(self):
         src = os.path.join(DOCS_PATH, f'{self.hash}.pdf')
         dest = os.path.join(
@@ -392,6 +477,50 @@ class Task(BaseModel):
         print(tabulate(_tasks, headers=[
               'ID', 'Nom', 'Client', 'Date', 'Facturé ?'], tablefmt='orgtbl'))
 
+    @staticmethod
+    def clean(read: dict):
+        return {
+            'pk': int(read.get('pk')),
+            'name': read.get('name'),
+            'price': float(read.get('price')),
+            'executed_at': read.get('executed_at'),
+            'customer': int(read.get('customer')),
+            'facture': read.get('facture'),
+        }
+
+    @staticmethod
+    def backup(filename='./backup/tasks.csv'):
+        fields = ['pk', 'name', 'price', 'executed_at', 'customer', 'facture']
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f, fields)
+            for task in Task.select():
+                task: Task
+                _task = task.serialize()
+                _task.update({
+                    'customer': task.customer.pk,
+                    'facture': task.facture.hash if task.facture else None
+                })
+                w.writerow(_task)
+
+    @staticmethod
+    def load_backup(filename='./backup/tasks.csv'):
+        fields = ['pk', 'name', 'price', 'executed_at', 'customer', 'facture']
+        with open(filename) as f:
+            r = csv.DictReader(f, fields)
+            with db.atomic():
+                for task in r:
+                    Task.create(**Task.clean(task))
+
+    def serialize(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'price': self.price,
+            'executed_at': self.executed_at,
+            'customer': self.customer.serialize(),
+            'facture': self.facture.serialize()
+        }
+
     def defacturer(self):
         self.facture = None
         self.save()
@@ -407,6 +536,36 @@ class SubTask(BaseModel):
     pk = pw.IntegerField(primary_key=True)
     name = pw.CharField()
 
+    @staticmethod
+    def backup(filename='./backup/subtasks.csv'):
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f, ['pk', 'name'])
+            for sub in SubTask.select():
+                sub: SubTask
+                _sub = sub.serialize()
+                w.writerow(_sub)
+
+    @staticmethod
+    def load_backup(filename='./backup/subtasks.csv'):
+        SubTask.delete().execute()
+        with open(filename) as f:
+            w = csv.DictReader(f, ['pk', 'name'])
+            for sub in w:
+                SubTask.create(**SubTask.clean(sub))
+
+    @staticmethod
+    def clean(read: dict):
+        return {
+            'pk': int(read.get('pk')),
+            'name': read.get('name'),
+        }
+
+    def serialize(self):
+        return {
+            'pk': self.pk,
+            'name': self.name
+        }
+
     def __str__(self):
         return self.name
 
@@ -416,6 +575,35 @@ class Pack(BaseModel):
     name = pw.CharField()
     customer: Customer = pw.ForeignKeyField(
         Customer, unique=True, backref='pack')
+
+    @staticmethod
+    def backup(filename='./backup/packs.csv'):
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f, fieldnames=['pk', 'name', 'customer'])
+            for pack in Pack.select():
+                pack: Pack
+                _pack = pack.serialize()
+                _pack.update({
+                    'customer': pack.customer.pk
+                })
+                w.writerow(_pack)
+
+    @staticmethod
+    def load_backup(filename='./backup/packs.csv'):
+        Pack.delete().execute()
+        with db.atomic():
+            with open(filename) as f:
+                r = csv.DictReader(f, fieldnames=['pk', 'name', 'customer'])
+                for pack in r:
+                    Pack.create(**Pack.clean(pack))
+
+    @staticmethod
+    def clean(read: dict):
+        return {
+            'pk': int(read.get('pk')),
+            'name': read.get('name'),
+            'customer': int(read.get('customer')),
+        }
 
     def generate_facture(self, obj) -> Facture:
         _hash = hb.blake2b(
@@ -482,6 +670,13 @@ class Pack(BaseModel):
         return float(sum([psub.value for psub
                           in PackSubTask.select().join(Pack).where(Pack.customer == self.customer)]))
 
+    def serialize(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'customer': self.customer.serialize()
+        }
+
     def __str__(self):
         return self.name
 
@@ -510,3 +705,28 @@ class PackSubTask(BaseModel):
                         pack=pack,
                         value=float(price.replace(',', '.'))
                     )
+
+    @staticmethod
+    def backup(filename='./backup/packsubtasks.csv'):
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f, fieldnames=[
+                               'value', 'subtask', 'pack'])
+            for pks in PackSubTask.select():
+                pks: PackSubTask
+                w.writerow(
+                    {'value': pks.value, 'subtask': pks.subtask, 'pack': pks.pack}
+                )
+
+    @staticmethod
+    def load_backup(filename='./backup/packs.csv'):
+        PackSubTask.delete().execute()
+        with open(filename) as f:
+            r = csv.DictReader(f, fieldnames=[
+                               'value', 'subtask', 'pack'])
+            for pks in r:
+                pks: dict
+                PackSubTask.create({
+                    'value': pks.get('value'),
+                    'subtask': int(pks.get('subtask')),
+                    'pack': int(pks.get('pack'))
+                })
