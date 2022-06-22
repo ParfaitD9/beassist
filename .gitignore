@@ -6,6 +6,7 @@ compta/*
 !docs/.gitkeep
 !csv/.gitkeep
 !compta/.gitkeep
+!backup/.gitkeep
 *.pdf
 .env
 *.zip
