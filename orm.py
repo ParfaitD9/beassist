@@ -17,6 +17,10 @@ load_dotenv()
 
 DOCS_PATH = os.getenv('DOCS_PATH')
 COMPTA_PATH = os.getenv('COMPTA_PATH')
+BACKUP_PATH = os.getenv('BACKUP_PATH')
+CSV_PATH = os.getenv('CSV_PATH')
+
+
 db = pw.SqliteDatabase('database.db3')
 
 
@@ -43,7 +47,7 @@ class City(BaseModel):
             with db.atomic():
                 for (city,) in list(r)[1:]:
                     c, _ = City.get_or_create(name=city)
-                    logging.info(f'Ville {c.name} créé !')
+                    print(f'Ville {c.name} créé !')
 
     @staticmethod
     def dump_to_csv(filename='./csv/cities.csv'):
@@ -155,12 +159,13 @@ class Customer(BaseModel):
                         'prospect': bool(int(pp))
                     }
                     c: Customer = Customer.create(**infos)
-                    logging.info(f'Client {c.name} créé')
+                    print(f'Client {c.name} créé')
 
     @staticmethod
     def backup(filename='./backup/customers.csv'):
         fields = ['pk', 'name', 'porte', 'street', 'city', 'appart', 'joined',
                   'postal', 'province', 'email', 'phone', 'statut', 'regulier', 'prospect']
+
         with open(filename, 'w') as f:
             w = csv.DictWriter(f, fieldnames=fields)
             w.writeheader()
@@ -172,14 +177,15 @@ class Customer(BaseModel):
 
     @staticmethod
     def load_backup(filename='./backup/customers.csv'):
-        fields = ['pk', 'name', 'porte', 'street', 'city', 'appart', 'joined',
-                  'postal', 'province', 'email', 'phone', 'statut', 'regulier', 'prospect']
-        Customer.delete().execute()
-        with open(filename, 'r') as f:
-            r = csv.DictReader(f)
-            with db.atomic():
-                for cus in r:
-                    Customer.create(**Customer.clean(cus))
+        if os.path.exists(filename):
+            Customer.delete().execute()
+            with open(filename, 'r') as f:
+                r = csv.DictReader(f)
+                with db.atomic():
+                    for cus in r:
+                        Customer.create(**Customer.clean(cus))
+        else:
+            print(f"{filename} inexistant. Backup Customer annulé")
 
     @staticmethod
     def clean(read: dict):
@@ -240,11 +246,11 @@ class Facture(BaseModel):
                 exp = ((_tmp <= Task.executed_at <= _fin)
                        & (Task.customer == client)
                        & (Task.facture == None))
-                logging.info(
+                print(
                     f'Génération de facture pour les tâches du {_tmp} au {_fin}')
 
             else:
-                logging.info(
+                print(
                     f'Génération de facture pour les tâches du {_tmp}')
                 exp = ((Task.executed_at == _tmp)
                        & (Task.customer == client)
@@ -252,7 +258,7 @@ class Facture(BaseModel):
 
             tasks = Task.select().where(exp).order_by(Task.executed_at.asc())
         except Exception as e:
-            logging.debug("One or multiple args seems invalid")
+            print("One or multiple args seems invalid")
             return
         _hash = hb.blake2b(
             (f'{client.pk}#{tmp}:{fin}' if fin else f'{client.pk}#{tmp}').encode(),
@@ -289,7 +295,7 @@ class Facture(BaseModel):
                         DOCS_PATH, f'{_hash}.pdf')
                     )
                 except Exception as e:
-                    logging.error(e.__class__, e.args[0])
+                    print(e.__class__, e.args[0])
                 else:
                     try:
                         f = Facture.create(
@@ -300,15 +306,15 @@ class Facture(BaseModel):
                             obj=obj
                         )
                     except (pw.IntegrityError,) as e:
-                        logging.debug("Same facture seems already exists.")
+                        print("Same facture seems already exists.")
                     else:
                         query = Task.update(facture=f).where(exp)
                         query.execute()
-                        logging.info(f"Facture {_hash} generated")
+                        print(f"Facture {_hash} generated")
 
                         return f
         else:
-            logging.warning(
+            print(
                 "Pas de tâches non facturés trouvées pour cette date ou cet intervalle")
 
     @staticmethod
@@ -323,7 +329,7 @@ class Facture(BaseModel):
 
         if debut and fin:
             debut, fin = dp.parse(debut), dp.parse(fin)
-            logging.info(f'Affichage des factures du {debut} au {fin}')
+            print(f'Affichage des factures du {debut} au {fin}')
             facs = [[fac.hash, fac.customer, fac.date, 'Oui' if fac.sent else 'Non']
                     for fac in Facture.select().where(debut <= Facture.date <= fin)]
         else:
@@ -376,12 +382,15 @@ class Facture(BaseModel):
     def load_backup(filename='./backup/factures.csv'):
         fields = ['hash', 'date', 'sent', 'cout',
                   'obj', 'soumission', 'customer']
-        Facture.delete().execute()
-        with db.atomic():
-            with open(filename) as f:
-                r = csv.DictReader(f, fieldnames=fields)
-                for fac in r:
-                    Facture.create(**Facture.clean(fac))
+        if os.path.exists(filename):
+            Facture.delete().execute()
+            with db.atomic():
+                with open(filename) as f:
+                    r = csv.DictReader(f, fieldnames=fields)
+                    for fac in r:
+                        Facture.create(**Facture.clean(fac))
+        else:
+            print(f"{filename} inexistant. Backup Facture annulé")
 
     def serialize(self):
         return {
@@ -416,14 +425,14 @@ class Facture(BaseModel):
                     [f'./docs/{self.hash}.pdf']
                 )
             except (Exception,) as e:
-                logging.error(
+                print(
                     f'{e.__class__} {e.args[0]} in sending mail to {receiver}')
             else:
                 self.sent = True
                 self.save()
                 if not self.soumission:
                     self.regenerate()
-                logging.info(
+                print(
                     f'Facture {self.hash} send to {receiver}.')
 
                 return True
@@ -438,9 +447,9 @@ class Facture(BaseModel):
         except (FileNotFoundError, ) as e:
             pass
         except (Exception,) as e:
-            logging.error(f'{e.__class__} : {e.args[0]}')
+            print(f'{e.__class__} : {e.args[0]}')
         finally:
-            logging.info(f'Facture {self.hash} successfully deleted')
+            print(f'Facture {self.hash} successfully deleted')
 
     def ht(self):
         return sum((task.price for task in self.tasks))
@@ -505,11 +514,15 @@ class Task(BaseModel):
     @staticmethod
     def load_backup(filename='./backup/tasks.csv'):
         fields = ['pk', 'name', 'price', 'executed_at', 'customer', 'facture']
-        with open(filename) as f:
-            r = csv.DictReader(f, fields)
-            with db.atomic():
-                for task in r:
-                    Task.create(**Task.clean(task))
+        if os.path.exists(filename):
+            Task.delete().execute()
+            with open(filename) as f:
+                r = csv.DictReader(f, fields)
+                with db.atomic():
+                    for task in r:
+                        Task.create(**Task.clean(task))
+        else:
+            print(f"{filename} inexistant. Backup Customer annulé")
 
     def serialize(self):
         return {
@@ -547,11 +560,14 @@ class SubTask(BaseModel):
 
     @staticmethod
     def load_backup(filename='./backup/subtasks.csv'):
-        SubTask.delete().execute()
-        with open(filename) as f:
-            w = csv.DictReader(f, ['pk', 'name'])
-            for sub in w:
-                SubTask.create(**SubTask.clean(sub))
+        if os.path.exists(filename):
+            SubTask.delete().execute()
+            with open(filename) as f:
+                w = csv.DictReader(f, ['pk', 'name'])
+                for sub in w:
+                    SubTask.create(**SubTask.clean(sub))
+        else:
+            print(f"{filename} inexistant. Backup Customer annulé")
 
     @staticmethod
     def clean(read: dict):
@@ -590,12 +606,16 @@ class Pack(BaseModel):
 
     @staticmethod
     def load_backup(filename='./backup/packs.csv'):
-        Pack.delete().execute()
-        with db.atomic():
-            with open(filename) as f:
-                r = csv.DictReader(f, fieldnames=['pk', 'name', 'customer'])
-                for pack in r:
-                    Pack.create(**Pack.clean(pack))
+        if os.path.exists(filename):
+            Pack.delete().execute()
+            with db.atomic():
+                with open(filename) as f:
+                    r = csv.DictReader(
+                        f, fieldnames=['pk', 'name', 'customer'])
+                    for pack in r:
+                        Pack.create(**Pack.clean(pack))
+        else:
+            print(f'{filename} not found')
 
     @staticmethod
     def clean(read: dict):
@@ -615,7 +635,7 @@ class Pack(BaseModel):
         tasks = PackSubTask.select().join(Pack).where(Pack.customer == self.customer)
         client: Customer = self.customer
         today = dt.today().strftime('%Y-%m-%d')
-
+        print(f"Génération at {today}")
         with open('templates/pack.html' if not self.customer.prospect else 'templates/soumission.html') as f:
             t: Template = Template(f.read())
             ctx = {
@@ -641,7 +661,7 @@ class Pack(BaseModel):
             try:
                 pdfkit.from_string(t, os.path.join(DOCS_PATH, f'{_hash}.pdf'))
             except Exception as e:
-                logging.error(e.__class__, e.args[0])
+                print(e.__class__, e.args[0])
             else:
                 try:
                     f = Facture.create(
@@ -653,9 +673,9 @@ class Pack(BaseModel):
                         soumission=True if client.prospect else False
                     )
                 except (pw.IntegrityError,) as e:
-                    logging.debug("Same facture seems already exists.")
+                    print("Same facture seems already exists.")
                 else:
-                    logging.info(f"Facture {_hash} generated")
+                    print(f"Facture {_hash} generated")
                     if not f.soumission:
                         t = Task.create(
                             name=f.obj,
@@ -708,25 +728,29 @@ class PackSubTask(BaseModel):
 
     @staticmethod
     def backup(filename='./backup/packsubtasks.csv'):
-        with open(filename, 'w') as f:
-            w = csv.DictWriter(f, fieldnames=[
-                               'value', 'subtask', 'pack'])
-            for pks in PackSubTask.select():
-                pks: PackSubTask
-                w.writerow(
-                    {'value': pks.value, 'subtask': pks.subtask, 'pack': pks.pack}
-                )
+        if os.path.exists(filename):
+            with open(filename, 'w') as f:
+                w = csv.DictWriter(f, fieldnames=[
+                    'value', 'subtask', 'pack'])
+                for pks in PackSubTask.select():
+                    pks: PackSubTask
+                    w.writerow(
+                        {'value': pks.value, 'subtask': pks.subtask, 'pack': pks.pack}
+                    )
 
     @staticmethod
     def load_backup(filename='./backup/packs.csv'):
-        PackSubTask.delete().execute()
-        with open(filename) as f:
-            r = csv.DictReader(f, fieldnames=[
-                               'value', 'subtask', 'pack'])
-            for pks in r:
-                pks: dict
-                PackSubTask.create({
-                    'value': pks.get('value'),
-                    'subtask': int(pks.get('subtask')),
-                    'pack': int(pks.get('pack'))
-                })
+        if os.path.exists(filename):
+            PackSubTask.delete().execute()
+            with open(filename) as f:
+                r = csv.DictReader(f, fieldnames=[
+                    'value', 'subtask', 'pack'])
+                for pks in r:
+                    pks: dict
+                    PackSubTask.create({
+                        'value': pks.get('value'),
+                        'subtask': int(pks.get('subtask')),
+                        'pack': int(pks.get('pack'))
+                    })
+        else:
+            print(f"{filename} inexistant. Backup PackSubtasks annulé")

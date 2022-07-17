@@ -101,3 +101,7 @@ Cette commande vous permet de créer un nouvel utilisateur grâce à la ligne de
 `python manage.py delete customer -c 25`
 
 Cette commande supprimera l'utilisateur avec l'id 25 dans la base de données.
+
+## L'interface graphique
+
+Pour démarrer le serveur de l'interface graphique, tapez la commande python app.py après avoir activer votre environnement virtuel.

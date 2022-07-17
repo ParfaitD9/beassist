@@ -6,18 +6,11 @@ from orm import City, Customer, Facture, Pack, PackSubTask, SubTask, Task, db
 import dateparser as dp
 import datetime
 import os
+import sys
 from datetimerange import DateTimeRange
 import warnings
 import logging
 
-logging.basicConfig(
-    filename='beassist.log',
-    filemode='a',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    format='[%(levelname)s] %(asctime)s | %(message)s',
-    level=logging.WARNING,
-    encoding='utf-8'
-)
 
 warnings.filterwarnings(
     "ignore",
@@ -283,7 +276,7 @@ def c_facture():
                 'message': 'Facture non générée'
             }
     except (Exception, ) as e:
-        logging.error(f'{e} : {e.args[0]}')
+        print(f'{e} : {e.args[0]}')
         return {
             'success': False,
             'message': f'{e.__class__} : {e.args[0]}'
@@ -612,4 +605,4 @@ def view_pdf(hash):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)
