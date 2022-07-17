@@ -1,9 +1,17 @@
+import subprocess
+try:
+    subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
+except (Exception, ) as e:
+    print(f'{e.__class__} : {e.args[0]}')
+else:
+    print('Dependences installed successfully')
+
 from orm import db, Customer, Task, Facture,\
     Pack, PackSubTask, SubTask, City
 import os
 from orm import DOCS_PATH, COMPTA_PATH, CSV_PATH, BACKUP_PATH
 import argparse
-import subprocess
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
