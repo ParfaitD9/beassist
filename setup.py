@@ -54,7 +54,6 @@ if __name__ == '__main__':
             print('Fichier .env trouvé')
 
         for path in (DOCS_PATH, COMPTA_PATH, BACKUP_PATH, CSV_PATH):
-            print('Path is ', path)
             try:
                 os.makedirs(path)
             except (FileExistsError, ) as e:

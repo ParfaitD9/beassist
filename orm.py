@@ -40,13 +40,16 @@ class City(BaseModel):
 
     @staticmethod
     def load_from_csv(filename='./csv/cities.csv'):
-        City.delete().execute()
-        with open(filename, encoding='utf-8') as f:
-            r = csv.reader(f)
-            with db.atomic():
-                for (city,) in list(r)[1:]:
-                    c, _ = City.get_or_create(name=city)
-                    print(f'Ville {c.name} créé !')
+        if os.path.exists(filename):
+            City.delete().execute()
+            with open(filename, encoding='utf-8') as f:
+                r = csv.reader(f)
+                with db.atomic():
+                    for (city,) in list(r)[1:]:
+                        c, _ = City.get_or_create(name=city)
+                        print(f'Ville {c.name} créé !')
+        else:
+            (filename, 'inexistant. Backup de ville annulé')
 
     @staticmethod
     def dump_to_csv(filename='./csv/cities.csv'):
@@ -135,30 +138,33 @@ class Customer(BaseModel):
 
     @staticmethod
     def load_from_csv(filename='./csv/customers.csv'):
-        Customer.delete().execute()
-        with open(filename, encoding='utf-8') as f:
-            reader = csv.reader(f)
-            with db.atomic():
-                for nom, porte, street, city, appart, joined, postal, prov, mail, ph, stt, reg, pp in list(reader)[1:]:
-                    city, _ = City.get_or_create(pk=int(city))
-                    city: City
-                    infos = {
-                        'name': nom,
-                        'porte': int(porte),
-                        'street': street,
-                        'city': city.pk,
-                        'appart': appart if appart else None,
-                        'joined': joined if joined else dt.today(),
-                        'postal': postal,
-                        'province': prov,
-                        'email': mail if mail else None,
-                        'phone': ph if ph else None,
-                        'statut': stt,
-                        'regulier': bool(int(reg)),
-                        'prospect': bool(int(pp))
-                    }
-                    c: Customer = Customer.create(**infos)
-                    print(f'Client {c.name} créé')
+        if os.path.exists(filename):
+            Customer.delete().execute()
+            with open(filename, encoding='utf-8') as f:
+                reader = csv.reader(f)
+                with db.atomic():
+                    for nom, porte, street, city, appart, joined, postal, prov, mail, ph, stt, reg, pp in list(reader)[1:]:
+                        city, _ = City.get_or_create(pk=int(city))
+                        city: City
+                        infos = {
+                            'name': nom,
+                            'porte': int(porte),
+                            'street': street,
+                            'city': city.pk,
+                            'appart': appart if appart else None,
+                            'joined': joined if joined else dt.today(),
+                            'postal': postal,
+                            'province': prov,
+                            'email': mail if mail else None,
+                            'phone': ph if ph else None,
+                            'statut': stt,
+                            'regulier': bool(int(reg)),
+                            'prospect': bool(int(pp))
+                        }
+                        c: Customer = Customer.create(**infos)
+                        print(f'Client {c.name} créé')
+        else:
+            print(filename, 'inexistant. Backup de Customer annulé')
 
     @staticmethod
     def backup(filename='./backup/customers.csv'):
@@ -707,23 +713,26 @@ class PackSubTask(BaseModel):
 
     @staticmethod
     def load_from_csv(filename='./csv/packs.csv'):
-        PackSubTask.delete().execute()
-        with db.atomic():
-            with open(filename, encoding='utf-8') as f:
-                r = csv.reader(f)
-                for cus, task, price in r:
-                    c: Customer = Customer.get(name=cus)
-                    st, _ = SubTask.get_or_create(name=task)
-                    pack, _ = Pack.get_or_create(
-                        customer=c,
-                        name=f'Pack : {c.name}'
-                    )
+        if os.path.exists(filename):
+            PackSubTask.delete().execute()
+            with db.atomic():
+                with open(filename, encoding='utf-8') as f:
+                    r = csv.reader(f)
+                    for cus, task, price in r:
+                        c: Customer = Customer.get(name=cus)
+                        st, _ = SubTask.get_or_create(name=task)
+                        pack, _ = Pack.get_or_create(
+                            customer=c,
+                            name=f'Pack : {c.name}'
+                        )
 
-                    psk = PackSubTask.create(
-                        subtask=st,
-                        pack=pack,
-                        value=float(price.replace(',', '.'))
-                    )
+                        psk = PackSubTask.create(
+                            subtask=st,
+                            pack=pack,
+                            value=float(price.replace(',', '.'))
+                        )
+        else:
+            print(filename, 'inexistant. Backup de PackSubTask annulée')
 
     @staticmethod
     def backup(filename='./backup/packsubtasks.csv'):
