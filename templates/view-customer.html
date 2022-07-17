@@ -52,11 +52,15 @@
           </tr>
           <tr>
             <th scope="row">Pack</th>
+            {% if customer.pack %}
             <td>
               <a href="/view/pack/{{customer.pack[0].pk}}"
                 >{{customer.pack[0].name}} : {{customer.pack[0].price()}} CAD</a
               >
             </td>
+            {% else %}
+            <td>Non défini</td>
+            {% endif %}
           </tr>
         </tbody>
       </table>

@@ -736,15 +736,14 @@ class PackSubTask(BaseModel):
 
     @staticmethod
     def backup(filename='./backup/packsubtasks.csv'):
-        if os.path.exists(filename):
-            with open(filename, 'w') as f:
-                w = csv.DictWriter(f, fieldnames=[
-                    'value', 'subtask', 'pack'])
-                for pks in PackSubTask.select():
-                    pks: PackSubTask
-                    w.writerow(
-                        {'value': pks.value, 'subtask': pks.subtask, 'pack': pks.pack}
-                    )
+        with open(filename, 'w') as f:
+            w = csv.DictWriter(f, fieldnames=[
+                'value', 'subtask', 'pack'])
+            for pks in PackSubTask.select():
+                pks: PackSubTask
+                w.writerow(
+                    {'value': pks.value, 'subtask': pks.subtask, 'pack': pks.pack}
+                )
 
     @staticmethod
     def load_backup(filename='./backup/packs.csv'):
