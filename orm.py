@@ -746,7 +746,7 @@ class PackSubTask(BaseModel):
                 )
 
     @staticmethod
-    def load_backup(filename='./backup/packs.csv'):
+    def load_backup(filename='./backup/packsubtasks.csv'):
         if os.path.exists(filename):
             PackSubTask.delete().execute()
             with open(filename) as f:
