@@ -51,23 +51,6 @@ if __name__ == '__main__':
 
     if args.cmd == 'build':
         try:
-            with open('.env') as f:
-                pass
-        except (FileNotFoundError,) as e:
-            print(
-                'Create .env file and configure it by *mv .env.exemple .env*.')
-        else:
-            print('Fichier .env trouvé')
-        try:
-            with open('.env') as f:
-                pass
-        except (FileNotFoundError,) as e:
-            print(
-                'Create .env file and configure it by *mv .env.exemple .env*.')
-        else:
-            print('Fichier .env trouvé')
-
-        try:
             db.connect()
             db.drop_tables([Customer, Task, Facture, Pack,
                             PackSubTask, SubTask])
