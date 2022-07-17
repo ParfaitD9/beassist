@@ -54,6 +54,7 @@ if __name__ == '__main__':
             print('Fichier .env trouvé')
 
         for path in (DOCS_PATH, COMPTA_PATH, BACKUP_PATH, CSV_PATH):
+            print('Path is ', path)
             try:
                 os.makedirs(path)
             except (FileExistsError, ) as e:
@@ -63,7 +64,7 @@ if __name__ == '__main__':
             else:
                 print(path, 'crée avec succès')
 
-            print("Importants paths created")
+        print("Importants paths created")
         City.load_from_csv()
         Customer.load_from_csv()
         PackSubTask.load_from_csv()

@@ -11,7 +11,6 @@ from jinja2 import Template
 from tabulate import tabulate
 import time
 from dotenv import load_dotenv
-import logging
 
 load_dotenv()
 
