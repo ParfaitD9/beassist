@@ -58,6 +58,8 @@ if __name__ == '__main__':
                 os.makedirs(path)
             except (FileExistsError, ) as e:
                 print(path, 'already exists')
+            except (Exception, ) as e:
+                print(f"{e.__class__} : {e.args[0]}")
             else:
                 print(path, 'crée avec succès')
 
