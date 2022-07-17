@@ -49,7 +49,7 @@ if __name__ == '__main__':
     import os
     from orm import DOCS_PATH, COMPTA_PATH, CSV_PATH, BACKUP_PATH
 
-    if args.cmd == 'reset':
+    if args.cmd == 'build':
         try:
             with open('.env') as f:
                 pass
