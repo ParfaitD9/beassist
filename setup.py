@@ -5,7 +5,7 @@ import subprocess
 parser = argparse.ArgumentParser()
 parser.add_argument(
     'cmd',
-    choices=('build', 'backup', 'load-backup')
+    choices=('build', 'backup', 'load-backup', 'install')
 )
 parser.add_argument(
     '--reset',
@@ -36,7 +36,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 if __name__ == '__main__':
-    if args.deps:
+    if args.deps and args.cmd == 'install':
         try:
             subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
         except (Exception, ) as e:
