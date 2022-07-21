@@ -498,6 +498,7 @@ def f_pack(pk):
             obj = request.form.get('obj')
             p.generate_facture(obj)
         except (Exception,) as e:
+            print(f"Erreur ici {e.__class__} : {e.args[0]}")
             return jsonify({
                 'success': False,
                 'message': f'{e.__class__} : {e.args[0]}'

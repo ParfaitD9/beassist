@@ -10,9 +10,11 @@ cssselect==1.1.0
 cssutils==2.4.0
 dateparser==1.1.1
 DateTimeRange==1.2.0
+defusedxml==0.7.1
 dkimpy==1.0.5
 dnspython==2.2.1
 Flask==2.1.2
+fpdf2==2.5.5
 google-api-core==2.8.0
 google-api-python-client==2.49.0
 google-auth==2.6.6
@@ -33,6 +35,7 @@ oauthlib==3.2.0
 packaging==21.3
 pdfkit==1.0.0
 peewee==3.14.10
+Pillow==9.2.0
 premailer==3.10.0
 protobuf==3.20.1
 pyasn1==0.4.8

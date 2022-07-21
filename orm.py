@@ -1,17 +1,17 @@
 import csv
 import shutil
 import peewee as pw
+import time
+from fpdf import FPDF
 from mailer import gmail_authenticate, send_message
 from datetime import date as dt
 import os
 import dateparser as dp
 import pdfkit
 import hashlib as hb
-from jinja2 import Template
+from fpdf.template import Template
 from tabulate import tabulate
-import time
 from dotenv import load_dotenv
-
 load_dotenv()
 
 DOCS_PATH = os.getenv('DOCS_PATH')
@@ -411,7 +411,7 @@ class Facture(BaseModel):
     def regenerate(self):
         src = os.path.join(DOCS_PATH, f'{self.hash}.pdf')
         dest = os.path.join(
-            COMPTA_PATH, f'{self.customer.statut}/{self.customer.name}')
+            COMPTA_PATH, f'{self.customer.statut}/{self.customer.name}/')
         os.makedirs(dest, exist_ok=True)
         shutil.copy(src, dest)
 
@@ -427,7 +427,11 @@ class Facture(BaseModel):
                     receiver,
                     'Facture de la part de Excellence Entretien',
                     body,
-                    [f'./docs/{self.hash}.pdf']
+                    [os.path.join(
+                        os.getenv('DOCS_PATH'),
+                        f'{self.hash}.pdf'
+                    ),
+                    ]
                 )
             except (Exception,) as e:
                 print(
@@ -569,8 +573,9 @@ class SubTask(BaseModel):
             SubTask.delete().execute()
             with open(filename) as f:
                 w = csv.DictReader(f, ['pk', 'name'])
-                for sub in w:
-                    SubTask.create(**SubTask.clean(sub))
+                with db.atomic():
+                    for sub in w:
+                        SubTask.create(**SubTask.clean(sub))
         else:
             print(f"{filename} inexistant. Backup Customer annulé")
 
@@ -631,65 +636,33 @@ class Pack(BaseModel):
         }
 
     def generate_facture(self, obj) -> Facture:
-        _hash = hb.blake2b(
-            f'{self.name}:{obj}:{int(time.time())}'.encode(),
-            digest_size=4,
-            salt=os.getenv('HASH_SALT').encode()
-        ).hexdigest()
-        _hash = f'{_hash}-{dt.today().year}-{self.customer.statut}'
-        tasks = PackSubTask.select().join(Pack).where(Pack.customer == self.customer)
-        client: Customer = self.customer
-        today = dt.today().strftime('%Y-%m-%d')
-        print(f"Génération at {today}")
-        with open('templates/pack.html' if not self.customer.prospect else 'templates/soumission.html') as f:
-            t: Template = Template(f.read())
-            ctx = {
-                'tasks': tasks,
-                'client': client,
-                'admin': Customer(
-                    name=os.getenv('ADMIN_FULLNAME'),
-                    adress=os.getenv('ADIMN_ADRESS'),
-                    phone=os.getenv('ADMIN_PHONE'),
-                    city=os.getenv('ADMIN_CITY'),
-                    email=os.getenv('EMAIL_USER')
-                ),
-                'nas': os.getenv('ADMIN_NAS'),
-                'tvs': os.getenv('ADMIN_TVS'),
-                'date': today,
-                'facture': _hash,
-                'obj': obj,
-                'ht': self.price(),
-                'taxes': round(self.price()*0.14975, 2)
-            }
-            t = t.render(ctx)
-
+        statut, _hash = generate_from_pack(self, obj)
+        if statut:
             try:
-                pdfkit.from_string(t, os.path.join(DOCS_PATH, f'{_hash}.pdf'))
-            except Exception as e:
-                print(e.__class__, e.args[0])
+                f = Facture.create(
+                    hash=_hash,
+                    customer_id=self.customer.pk,
+                    date=dt.today().strftime('%Y-%m-%d'),
+                    cout=self.price(),
+                    obj=obj,
+                    soumission=True if self.customer.prospect else False
+                )
+            except (pw.IntegrityError,) as e:
+                print("Same facture seems already exists.")
+                return _hash
             else:
-                try:
-                    f = Facture.create(
-                        hash=_hash,
-                        customer_id=client.pk,
-                        date=today,
-                        cout=self.price(),
-                        obj=obj,
-                        soumission=True if client.prospect else False
+                print(f"Facture {_hash} generated")
+                if not f.soumission:
+                    t = Task.create(
+                        name=f.obj,
+                        price=f.cout,
+                        executed_at=f.date,
+                        customer=f.customer,
+                        facture=f
                     )
-                except (pw.IntegrityError,) as e:
-                    print("Same facture seems already exists.")
-                else:
-                    print(f"Facture {_hash} generated")
-                    if not f.soumission:
-                        t = Task.create(
-                            name=f.obj,
-                            price=f.cout,
-                            executed_at=f.date,
-                            customer=f.customer,
-                            facture=f
-                        )
-                    return f
+                return f
+        else:
+            return _hash
 
     def price(self):
         return float(sum([psub.value for psub
@@ -742,7 +715,7 @@ class PackSubTask(BaseModel):
             for pks in PackSubTask.select():
                 pks: PackSubTask
                 w.writerow(
-                    {'value': pks.value, 'subtask': pks.subtask, 'pack': pks.pack}
+                    {'value': pks.value, 'subtask': pks.subtask.pk, 'pack': pks.pack.pk}
                 )
 
     @staticmethod
@@ -754,10 +727,162 @@ class PackSubTask(BaseModel):
                     'value', 'subtask', 'pack'])
                 for pks in r:
                     pks: dict
-                    PackSubTask.create({
-                        'value': pks.get('value'),
+                    PackSubTask.create(**{
+                        'value': float(pks.get('value')),
                         'subtask': int(pks.get('subtask')),
                         'pack': int(pks.get('pack'))
                     })
         else:
             print(f"{filename} inexistant. Backup PackSubtasks annulé")
+
+
+# Fonctions utilitaires
+
+def percent(p, height=False):
+    w = 210.00
+    h = 297.00
+
+    return (p/100)*(h if height else w)
+
+
+def generate_from_pack(pack: Pack, obj: str):
+    tasks: list[PackSubTask] = PackSubTask.select().join(
+        Pack).where(Pack.customer == pack.customer)
+    today = dt.today().strftime('%Y-%m-%d')
+    _hash = hb.blake2b(
+        f'{pack.name}:{obj}:{int(time.time())}'.encode(),
+        digest_size=4,
+        salt=os.getenv('HASH_SALT').encode()
+    ).hexdigest()
+    _hash = f'{_hash}-{dt.today().year}-{pack.customer.statut}'
+    ctx = {
+        'tasks': tasks,
+        'client': pack.customer,
+        'admin': Customer(
+            name=os.getenv('ADMIN_FULLNAME'),
+            adress=os.getenv('ADIMN_ADRESS'),
+            phone=os.getenv('ADMIN_PHONE'),
+            city=os.getenv('ADMIN_CITY'),
+            email=os.getenv('EMAIL_USER')
+        ),
+        'nas': os.getenv('ADMIN_NAS'),
+        'tvs': os.getenv('ADMIN_TVS'),
+        'date': today,
+        'facture': _hash,
+        'obj': obj,
+        'ht': pack.price(),
+        'taxes': round(pack.price()*0.14975, 2)
+    }
+    admin = Customer(
+        name=os.getenv('ADMIN_FULLNAME'),
+        adress=os.getenv('ADIMN_ADRESS'),
+        phone=os.getenv('ADMIN_PHONE'),
+        city=os.getenv('ADMIN_CITY'),
+        email=os.getenv('EMAIL_USER')
+    )
+    elements = [
+        {'name': 'organizme', 'type': 'T', 'size': 13, 'bold': 1,
+            'x1': percent(5), 'x2': percent(45), 'y1': percent(4, True), 'y2': percent(4, True), },
+        {'name': 'facture-hash', 'type': 'T', 'size': 17, 'align': 'R',
+            'x1': percent(60), 'x2': percent(95), 'y1': percent(4., True), 'y2': percent(4., True), },
+        {'name': 'organizme-billet', 'type': 'T', 'size': 13,
+            'x1': percent(5), 'x2': percent(65), 'y1': percent(4.3, True), 'y2': percent(5.1, True), 'multiline': True},
+        {'name': 'admin-billet', 'type': 'T', 'size': 11,
+            'x1': percent(5), 'x2': percent(50), 'y1': percent(8.8, True), 'y2': percent(10, True), 'multiline': True},
+        {'name': 'facture-object', 'type': 'T', 'size': 11, 'align': 'R',
+            'x1': percent(60), 'x2': percent(95), 'y1': percent(5, True), 'y2': percent(7, True), },
+        {'name': 'facture-date', 'type': 'T', 'size': 12, 'align': 'R',
+            'x1': percent(60), 'x2': percent(95), 'y1': percent(7., True), 'y2': percent(9., True), },
+        {'name': 'client-billet', 'type': 'T', 'size': 11,
+            'x1': percent(5), 'x2': percent(50), 'y1': percent(18.7, True), 'y2': percent(20, True), 'multiline': True},
+    ]
+
+    # here we instantiate the template
+    f = Template(
+        format="A4",
+        elements=elements,
+        title=f"Facture {_hash}",
+        author="Entretien Excellence",
+        unit='mm',
+        creator='FPDF 2',
+        keywords="entretien excellence, facture",
+        subject=f"Facture {_hash}",
+    )
+
+    f.add_page()
+
+    # we FILL some of the fields of the template with the information we want
+    # note we access the elements treating the template instance as a "dict"
+
+    f['organizme'] = "Entretien Excellence & Cie"
+    f['facture-hash'] = f'Facture {_hash}'
+    f['organizme-billet'] = '''
+    Lavage de vitres - Solutions durables et R&D\n
+    Mirabel, Québec
+    '''
+
+    f['admin-billet'] = f'''
+{admin.name}
+Directeur des opérations commerciales
+{admin.phone}
+{admin.email}
+NAS : XXX XXX 268
+'''
+
+    f['facture-object'] = f"Objet : {obj}"
+    f['facture-date'] = today
+    f['client-billet'] = f"""
+{pack.customer.name}
+{pack.customer.addresse()}
+{pack.customer.postal}
+{pack.customer.city.name}, {pack.customer.province}
+{pack.customer.email}
+"""
+
+    data = (
+        ("Désgnation", "Montant"),
+        *((task.subtask.name, task.value) for task in tasks),
+        ("Sous total ", pack.price()),
+        ("Tâxes ", pack.price()*0.1496),
+        ("Total", pack.price()*1.1496)
+    )
+
+    pdf: FPDF = f.pdf
+    pdf.set_font("helvetica", size=12)
+    if pack.customer.prospect:
+        pdf.set_y(percent(38, True))
+        pdf.cell(
+            txt=f"Cher {pack.customer.name}, Entretien Excellence vous propose les services suivant : ")
+    pdf.set_y(percent(40, True))
+    line_height = pdf.font_size * 1.75
+    col_width = pdf.epw / 2  # distribute content evenly
+    for i, row in enumerate(data):
+        if i in (0, len(data) - 1):
+            pdf.set_font(style='B')
+        else:
+            pdf.set_font(style='')
+
+        for j, col in enumerate(row):
+            pdf.multi_cell(
+                col_width,
+                line_height,
+                f'{col:.2f} $' if i != 0 and j == 1 else col,
+                border=1,
+                align=('C' if j == 1 or i in (0, len(data) - 1) else 'L'),
+                new_x="RIGHT", new_y="TOP",
+                max_line_height=pdf.font_size
+            )
+        pdf.ln(line_height)
+
+    pdf.set_y(percent(60, True))
+    pdf.set_font(style='', size=16)
+    pdf.cell(txt="Merci de votre confiance !")
+
+    try:
+        f.render(os.path.join(
+            DOCS_PATH, f'{_hash}.pdf'))
+    except (Exception,) as e:
+        print(e.__class__.__name__, e.args[0])
+        return False, e.args[0]
+    else:
+        return True, _hash
